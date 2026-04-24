@@ -106,4 +106,54 @@ router.post("/", (req, res) => controller.store(req, res));
  */
 router.put("/:id", (req, res) => controller.update(req, res));
 
+/**
+ * @openapi
+ * /cooperados/{id}:
+ *   delete:
+ *     summary: Exclui um cooperado
+ *     description: Exclui um cooperado específico. O usuário só pode excluir cooperados da sua própria unidade.
+ *     tags:
+ *       - Cooperados
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID do cooperado a ser excluído.
+ *     responses:
+ *       '200':
+ *         description: Cooperado excluído com sucesso.
+ *       '403':
+ *         description: Acesso negado (cooperado pertence a outra unidade).
+ *       '404':
+ *         description: Cooperado não encontrado.
+ */
+router.delete("/:id", (req, res) => controller.delete(req, res));
+
+/**
+ * @openapi
+ * /cooperados/{id}:
+ *   delete:
+ *     summary: Exclui um cooperado
+ *     description: Exclui um cooperado específico. O usuário só pode excluir cooperados da sua própria unidade.
+ *     tags:
+ *       - Cooperados
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID do cooperado a ser excluído.
+ *     responses:
+ *       '200':
+ *         description: Cooperado excluído com sucesso.
+ *       '403':
+ *         description: Acesso negado (cooperado pertence a outra unidade).
+ *       '404':
+ *         description: Cooperado não encontrado.
+ */
+router.delete("/:id", (req, res) => controller.delete(req, res));
+
 export default router;

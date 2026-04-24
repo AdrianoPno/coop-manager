@@ -74,4 +74,25 @@ export class CooperadosService {
 
     return { id: doc.id, ...doc.data() } as ICooperado;
   }
+
+  async delete(id: string, unidadeId: string): Promise<void> {
+    const docRef = this.collection.doc(id);
+    const doc = await docRef.get();
+
+    // 1. Validar existência
+    if (!doc.exists) {
+      throw new AppError("Cooperado não encontrado.", 404);
+    }
+
+    // 2. Validar Isolamento (Multi-tenant)
+    if (doc.data()?.unidadeId !== unidadeId) {
+      throw new AppError(
+        "Acesso negado: este registro pertence a outra unidade.",
+        403,
+      );
+    }
+
+    // 3. Persistir exclusão
+    await docRef.delete();
+  }
 }

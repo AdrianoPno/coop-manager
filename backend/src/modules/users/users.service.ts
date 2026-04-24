@@ -1,5 +1,6 @@
 import { db } from "../../config/firebase";
 import { AppError } from "../../utils/AppError";
+import { getAuth } from "firebase-admin/auth";
 import { IUser, ICreateUserDTO, IUpdateUserDTO } from "./usuario.types";
 
 export class UsersService {
@@ -94,5 +95,41 @@ export class UsersService {
       ...data,
       updatedAt: new Date(),
     });
+  }
+
+  /**
+   * Exclui um usuário do Firestore e do Firebase Authentication.
+   */
+  async delete(uid: string, adminUnidadeId: string): Promise<void> {
+    const userRef = this.collection.doc(uid);
+    const doc = await userRef.get();
+
+    if (!doc.exists) {
+      throw new AppError("Usuário não encontrado.", 404);
+    }
+
+    // Validação Sênior: Admin só exclui usuários da sua unidade
+    if (doc.data()?.unidadeId !== adminUnidadeId) {
+      throw new AppError(
+        "Acesso negado: usuário pertence a outra unidade.",
+        403,
+      );
+    }
+
+    // Exclui do Firestore
+    await userRef.delete();
+
+    // Exclui do Firebase Authentication
+    try {
+      await getAuth().deleteUser(uid);
+    } catch (error: any) {
+      if (error.code === "auth/user-not-found") {
+        console.warn(
+          `Usuário com UID ${uid} já havia sido removido do Firebase Auth.`,
+        );
+      } else {
+        throw new AppError("Falha ao remover o usuário da autenticação.", 500);
+      }
+    }
   }
 }

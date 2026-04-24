@@ -8,16 +8,11 @@ const usersService = new UsersService();
 export class UsersController {
   // Lista todos os usuários da mesma unidade do ADMIN
   async index(req: AuthRequest, res: Response) {
-    if (!req.user) throw new AppError("Não autorizado", 401);
-
-    const adminUser = await usersService.getById(req.user.uid);
-    if (!adminUser) throw new AppError("Administrador não encontrado", 404);
-
-    if (adminUser.role !== "ADMIN") {
-      throw new AppError("Acesso restrito a administradores.", 403);
+    // O middleware adminOnly já garante que req.user existe e é um admin.
+    if (!req.user?.unidadeId) {
+      throw new AppError("Unidade do administrador não encontrada.", 400);
     }
-
-    const users = await usersService.listByUnidade(adminUser.unidadeId);
+    const users = await usersService.listByUnidade(req.user.unidadeId);
     return res.status(200).json({
       success: true,
       data: users,
@@ -27,15 +22,9 @@ export class UsersController {
 
   // Cria um novo usuário vinculado a uma unidade
   async store(req: AuthRequest, res: Response) {
-    if (!req.user) throw new AppError("Não autorizado", 401);
-
-    const adminUser = await usersService.getById(req.user.uid);
-    if (!adminUser) throw new AppError("Administrador não encontrado", 404);
-
-    if (adminUser.role !== "ADMIN") {
-      throw new AppError("Acesso negado.", 403);
+    if (!req.user?.unidadeId) {
+      throw new AppError("Unidade do administrador não encontrada.", 400);
     }
-
     const { uid, nome, email, role } = req.body;
 
     if (!uid || typeof uid !== "string") {
@@ -43,7 +32,7 @@ export class UsersController {
     }
 
     // Se o admin não for super, ele só pode criar usuários para a própria unidade
-    const targetUnidade = adminUser.unidadeId;
+    const targetUnidade = req.user.unidadeId;
 
     await usersService.create(
       {
@@ -71,21 +60,36 @@ export class UsersController {
       throw new AppError("ID de usuário inválido", 400);
     }
 
-    if (!req.user) throw new AppError("Não autorizado", 401);
-
-    const adminUser = await usersService.getById(req.user.uid);
-    if (!adminUser) throw new AppError("Administrador não encontrado", 404);
-
-    if (adminUser.role !== "ADMIN") {
-      throw new AppError("Acesso restrito a administradores.", 403);
+    if (!req.user?.unidadeId) {
+      throw new AppError("Unidade do administrador não encontrada.", 400);
     }
 
     // Passa o id (quem), data (o que) e adminUser.unidadeId (validação de segurança)
-    await usersService.update(id, data, adminUser.unidadeId);
+    await usersService.update(id, data, req.user.unidadeId);
 
     return res.status(200).json({
       success: true,
       message: "Usuário atualizado com sucesso.",
+    });
+  }
+
+  // Exclui um usuário
+  async delete(req: AuthRequest, res: Response) {
+    const { id } = req.params; // UID do usuário que será excluído
+
+    if (typeof id !== "string") {
+      throw new AppError("ID de usuário inválido", 400);
+    }
+
+    if (!req.user?.unidadeId) {
+      throw new AppError("Unidade do administrador não encontrada.", 400);
+    }
+
+    await usersService.delete(id, req.user.unidadeId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Usuário excluído com sucesso.",
     });
   }
 }

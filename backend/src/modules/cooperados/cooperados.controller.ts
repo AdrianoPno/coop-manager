@@ -9,12 +9,13 @@ const usersService = new UsersService();
 
 export class CooperadosController {
   async index(req: AuthRequest, res: Response) {
-    if (!req.user) throw new AppError("Não autorizado", 401);
+    if (!req.user?.unidadeId) {
+      throw new AppError("Usuário não está associado a uma unidade.", 400);
+    }
 
-    const user = await usersService.getById(req.user.uid);
-    if (!user) throw new AppError("Usuário não encontrado", 404);
-
-    const cooperados = await cooperadosService.listByUnidade(user.unidadeId);
+    const cooperados = await cooperadosService.listByUnidade(
+      req.user.unidadeId,
+    );
     return res.status(200).json({
       success: true,
       data: cooperados,
@@ -23,12 +24,11 @@ export class CooperadosController {
   }
 
   async store(req: AuthRequest, res: Response) {
-    if (!req.user) throw new AppError("Não autorizado", 401);
+    if (!req.user?.unidadeId) {
+      throw new AppError("Usuário não está associado a uma unidade.", 400);
+    }
 
-    const user = await usersService.getById(req.user.uid);
-    if (!user) throw new AppError("Usuário não encontrado", 404);
-
-    const id = await cooperadosService.create(req.body, user.unidadeId);
+    const id = await cooperadosService.create(req.body, req.user.unidadeId);
     return res.status(201).json({
       success: true,
       data: { id },
@@ -45,16 +45,34 @@ export class CooperadosController {
       throw new AppError("ID do cooperado inválido", 400);
     }
 
-    if (!req.user) throw new AppError("Não autorizado", 401);
+    if (!req.user?.unidadeId) {
+      throw new AppError("Usuário não está associado a uma unidade.", 400);
+    }
 
-    const user = await usersService.getById(req.user.uid);
-    if (!user) throw new AppError("Usuário não encontrado", 404);
-
-    await cooperadosService.update(id, data, user.unidadeId);
+    await cooperadosService.update(id, data, req.user.unidadeId);
 
     return res.status(200).json({
       success: true,
       message: "Cooperado atualizado com sucesso.",
+    });
+  }
+
+  async delete(req: AuthRequest, res: Response) {
+    const { id } = req.params;
+
+    if (typeof id !== "string") {
+      throw new AppError("ID do cooperado inválido", 400);
+    }
+
+    if (!req.user?.unidadeId) {
+      throw new AppError("Usuário não está associado a uma unidade.", 400);
+    }
+
+    await cooperadosService.delete(id, req.user.unidadeId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Cooperado excluído com sucesso.",
     });
   }
 }

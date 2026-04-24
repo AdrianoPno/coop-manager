@@ -1,11 +1,12 @@
 import { Router } from "express";
 import { UsersController } from "./users.controller";
 import { authMiddleware } from "../../middleware/auth.middleware";
+import { adminOnly } from "../../middleware/adminOnly.middleware";
 
 const router = Router();
 const controller = new UsersController();
 
-router.use(authMiddleware);
+router.use(authMiddleware, adminOnly);
 
 /**
  * @openapi
@@ -94,5 +95,30 @@ router.post("/", (req, res) => controller.store(req, res));
  *         description: Usuário não encontrado.
  */
 router.put("/:id", (req, res) => controller.update(req, res));
+
+/**
+ * @openapi
+ * /users/{id}:
+ *   delete:
+ *     summary: Exclui um usuário
+ *     description: Exclui um usuário do sistema (Firestore e Firebase Auth). Um administrador só pode excluir usuários da sua própria unidade. Acesso restrito a 'ADMIN'.
+ *     tags:
+ *       - Usuários
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: UID do usuário a ser excluído.
+ *     responses:
+ *       '200':
+ *         description: Usuário excluído com sucesso.
+ *       '403':
+ *         description: Acesso negado (usuário de outra unidade ou sem permissão de admin).
+ *       '404':
+ *         description: Usuário não encontrado.
+ */
+router.delete("/:id", (req, res) => controller.delete(req, res));
 
 export default router;
