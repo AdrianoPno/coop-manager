@@ -1,6 +1,13 @@
 import { Router } from "express";
 import { authMiddleware } from "../../middleware/auth.middleware";
 import { CooperadosController } from "./cooperados.controller";
+import { validate } from "../../middleware/validate.middleware";
+import {
+  getCooperadoSchema,
+  createCooperadoSchema,
+  updateCooperadoSchema,
+  deleteCooperadoSchema,
+} from "../../utils/cooperados.schema";
 
 const router = Router();
 const controller = new CooperadosController();
@@ -37,6 +44,35 @@ router.get("/", (req, res) => controller.index(req, res));
 
 /**
  * @openapi
+ * /cooperados/{id}:
+ *   get:
+ *     summary: Busca um cooperado por ID
+ *     description: Retorna os detalhes de um cooperado específico, desde que pertença à unidade do usuário autenticado.
+ *     tags:
+ *       - Cooperados
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID do cooperado.
+ *     responses:
+ *       '200':
+ *         description: Detalhes do cooperado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ICooperado'
+ *       '404':
+ *         description: Cooperado não encontrado.
+ */
+router.get("/:id", validate(getCooperadoSchema), (req, res) =>
+  controller.show(req, res),
+);
+
+/**
+ * @openapi
  * /cooperados:
  *   post:
  *     summary: Cria um novo cooperado
@@ -69,7 +105,9 @@ router.get("/", (req, res) => controller.index(req, res));
  *       '401':
  *         description: Não autorizado.
  */
-router.post("/", (req, res) => controller.store(req, res));
+router.post("/", validate(createCooperadoSchema), (req, res) =>
+  controller.store(req, res),
+);
 
 /**
  * @openapi
@@ -104,7 +142,9 @@ router.post("/", (req, res) => controller.store(req, res));
  *       '404':
  *         description: Cooperado não encontrado.
  */
-router.put("/:id", (req, res) => controller.update(req, res));
+router.put("/:id", validate(updateCooperadoSchema), (req, res) =>
+  controller.update(req, res),
+);
 
 /**
  * @openapi
@@ -129,31 +169,8 @@ router.put("/:id", (req, res) => controller.update(req, res));
  *       '404':
  *         description: Cooperado não encontrado.
  */
-router.delete("/:id", (req, res) => controller.delete(req, res));
-
-/**
- * @openapi
- * /cooperados/{id}:
- *   delete:
- *     summary: Exclui um cooperado
- *     description: Exclui um cooperado específico. O usuário só pode excluir cooperados da sua própria unidade.
- *     tags:
- *       - Cooperados
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID do cooperado a ser excluído.
- *     responses:
- *       '200':
- *         description: Cooperado excluído com sucesso.
- *       '403':
- *         description: Acesso negado (cooperado pertence a outra unidade).
- *       '404':
- *         description: Cooperado não encontrado.
- */
-router.delete("/:id", (req, res) => controller.delete(req, res));
+router.delete("/:id", validate(deleteCooperadoSchema), (req, res) =>
+  controller.delete(req, res),
+);
 
 export default router;

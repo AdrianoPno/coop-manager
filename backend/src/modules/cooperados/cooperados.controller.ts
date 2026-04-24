@@ -23,6 +23,26 @@ export class CooperadosController {
     });
   }
 
+  async show(req: AuthRequest, res: Response) {
+    const { id } = req.params;
+
+    if (typeof id !== "string") {
+      throw new AppError("ID do cooperado inválido.", 400);
+    }
+
+    if (!req.user?.unidadeId) {
+      throw new AppError("Usuário não está associado a uma unidade.", 400);
+    }
+
+    const cooperado = await cooperadosService.getById(id, req.user.unidadeId);
+
+    return res.status(200).json({
+      success: true,
+      data: cooperado,
+      message: "Cooperado recuperado com sucesso.",
+    });
+  }
+
   async store(req: AuthRequest, res: Response) {
     if (!req.user?.unidadeId) {
       throw new AppError("Usuário não está associado a uma unidade.", 400);
@@ -40,9 +60,8 @@ export class CooperadosController {
     const { id } = req.params;
     const data = req.body;
 
-    // Proteção: Garante que id seja estritamente string
     if (typeof id !== "string") {
-      throw new AppError("ID do cooperado inválido", 400);
+      throw new AppError("ID do cooperado inválido.", 400);
     }
 
     if (!req.user?.unidadeId) {
@@ -61,7 +80,7 @@ export class CooperadosController {
     const { id } = req.params;
 
     if (typeof id !== "string") {
-      throw new AppError("ID do cooperado inválido", 400);
+      throw new AppError("ID do cooperado inválido.", 400);
     }
 
     if (!req.user?.unidadeId) {

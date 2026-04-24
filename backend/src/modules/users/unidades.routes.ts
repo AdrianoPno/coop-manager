@@ -2,6 +2,13 @@ import { Router } from "express";
 import { UnidadesController } from "./unidades.controller";
 import { authMiddleware } from "../../middleware/auth.middleware";
 import { adminOnly } from "../../middleware/adminOnly.middleware";
+import { validate } from "../../middleware/validate.middleware";
+import {
+  getUnidadeSchema,
+  createUnidadeSchema,
+  updateUnidadeSchema,
+  deleteUnidadeSchema,
+} from "../../utils/unidades.schema";
 
 const router = Router();
 const controller = new UnidadesController();
@@ -60,7 +67,9 @@ router.get("/", (req, res) => controller.index(req, res));
  *       '404':
  *         description: Unidade não encontrada.
  */
-router.get("/:id", (req, res) => controller.show(req, res));
+router.get("/:id", validate(getUnidadeSchema), (req, res) =>
+  controller.show(req, res),
+);
 
 /**
  * @openapi
@@ -82,7 +91,9 @@ router.get("/:id", (req, res) => controller.show(req, res));
  *       '400':
  *         description: Dados inválidos ou sigla já em uso.
  */
-router.post("/", (req, res) => controller.store(req, res));
+router.post("/", validate(createUnidadeSchema), (req, res) =>
+  controller.store(req, res),
+);
 
 /**
  * @openapi
@@ -113,7 +124,9 @@ router.post("/", (req, res) => controller.store(req, res));
  *       '404':
  *         description: Unidade não encontrada.
  */
-router.put("/:id", (req, res) => controller.update(req, res));
+router.put("/:id", validate(updateUnidadeSchema), (req, res) =>
+  controller.update(req, res),
+);
 
 /**
  * @openapi
@@ -138,6 +151,8 @@ router.put("/:id", (req, res) => controller.update(req, res));
  *       '404':
  *         description: Unidade não encontrada.
  */
-router.delete("/:id", (req, res) => controller.delete(req, res));
+router.delete("/:id", validate(deleteUnidadeSchema), (req, res) =>
+  controller.delete(req, res),
+);
 
 export default router;

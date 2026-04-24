@@ -35,10 +35,6 @@ export class UnidadesController {
   async store(req: AuthRequest, res: Response) {
     const { nome, sigla, status } = req.body;
 
-    if (!nome || !sigla) {
-      throw new AppError("Os campos 'nome' e 'sigla' são obrigatórios.", 400);
-    }
-
     const id = await unidadesService.create({ nome, sigla, status });
     return res.status(201).json({
       success: true,
@@ -53,10 +49,6 @@ export class UnidadesController {
 
     if (typeof id !== "string") {
       throw new AppError("ID da unidade inválido.", 400);
-    }
-
-    if (Object.keys(data).length === 0) {
-      throw new AppError("Nenhum dado fornecido para atualização.", 400);
     }
 
     await unidadesService.update(id, data);

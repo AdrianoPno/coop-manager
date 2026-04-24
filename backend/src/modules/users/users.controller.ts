@@ -27,10 +27,6 @@ export class UsersController {
     }
     const { uid, nome, email, role } = req.body;
 
-    if (!uid || typeof uid !== "string") {
-      throw new AppError("O campo 'uid' é obrigatório.", 400);
-    }
-
     // Se o admin não for super, ele só pode criar usuários para a própria unidade
     const targetUnidade = req.user.unidadeId;
 
@@ -55,9 +51,8 @@ export class UsersController {
     const { id } = req.params; // UID do usuário que será editado
     const data = req.body;
 
-    // Type Guard para garantir que 'id' seja string
     if (typeof id !== "string") {
-      throw new AppError("ID de usuário inválido", 400);
+      throw new AppError("ID de usuário inválido.", 400);
     }
 
     if (!req.user?.unidadeId) {
@@ -78,7 +73,7 @@ export class UsersController {
     const { id } = req.params; // UID do usuário que será excluído
 
     if (typeof id !== "string") {
-      throw new AppError("ID de usuário inválido", 400);
+      throw new AppError("ID de usuário inválido.", 400);
     }
 
     if (!req.user?.unidadeId) {

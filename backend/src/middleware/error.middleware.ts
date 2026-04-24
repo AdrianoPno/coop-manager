@@ -1,12 +1,21 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../utils/AppError";
+import { ValidationError } from "../utils/ValidationError";
 
 export const errorMiddleware = (
-  error: Error | AppError,
+  error: Error,
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
+  if (error instanceof ValidationError) {
+    return res.status(error.statusCode).json({
+      success: false,
+      message: error.message,
+      errors: error.errors,
+    });
+  }
+
   if (error instanceof AppError) {
     return res.status(error.statusCode).json({
       success: false,

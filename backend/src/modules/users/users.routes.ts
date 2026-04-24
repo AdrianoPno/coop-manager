@@ -2,6 +2,12 @@ import { Router } from "express";
 import { UsersController } from "./users.controller";
 import { authMiddleware } from "../../middleware/auth.middleware";
 import { adminOnly } from "../../middleware/adminOnly.middleware";
+import { validate } from "../../middleware/validate.middleware";
+import {
+  createUserSchema,
+  updateUserSchema,
+  deleteUserSchema,
+} from "../../utils/users.schema";
 
 const router = Router();
 const controller = new UsersController();
@@ -61,7 +67,9 @@ router.get("/", (req, res) => controller.index(req, res));
  *       '403':
  *         description: Acesso negado.
  */
-router.post("/", (req, res) => controller.store(req, res));
+router.post("/", validate(createUserSchema), (req, res) =>
+  controller.store(req, res),
+);
 
 /**
  * @openapi
@@ -94,7 +102,9 @@ router.post("/", (req, res) => controller.store(req, res));
  *       '404':
  *         description: Usuário não encontrado.
  */
-router.put("/:id", (req, res) => controller.update(req, res));
+router.put("/:id", validate(updateUserSchema), (req, res) =>
+  controller.update(req, res),
+);
 
 /**
  * @openapi
@@ -119,6 +129,8 @@ router.put("/:id", (req, res) => controller.update(req, res));
  *       '404':
  *         description: Usuário não encontrado.
  */
-router.delete("/:id", (req, res) => controller.delete(req, res));
+router.delete("/:id", validate(deleteUserSchema), (req, res) =>
+  controller.delete(req, res),
+);
 
 export default router;
