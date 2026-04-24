@@ -9,7 +9,7 @@ export const errorMiddleware = (
 ) => {
   if (error instanceof AppError) {
     return res.status(error.statusCode).json({
-      status: "error",
+      success: false,
       message: error.message,
     });
   }
@@ -17,7 +17,7 @@ export const errorMiddleware = (
   console.error(`[ERROR] ${req.method} ${req.url}:`, error);
 
   return res.status(500).json({
-    status: "error",
-    message: "Internal server error",
+    success: false,
+    message: "Erro interno do servidor.",
   });
 };

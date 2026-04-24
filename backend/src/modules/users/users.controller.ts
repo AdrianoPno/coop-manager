@@ -18,7 +18,11 @@ export class UsersController {
     }
 
     const users = await usersService.listByUnidade(adminUser.unidadeId);
-    return res.json(users);
+    return res.status(200).json({
+      success: true,
+      data: users,
+      message: "Usuários listados com sucesso.",
+    });
   }
 
   // Cria um novo usuário vinculado a uma unidade
@@ -34,18 +38,27 @@ export class UsersController {
 
     const { uid, nome, email, role } = req.body;
 
+    if (!uid || typeof uid !== "string") {
+      throw new AppError("O campo 'uid' é obrigatório.", 400);
+    }
+
     // Se o admin não for super, ele só pode criar usuários para a própria unidade
     const targetUnidade = adminUser.unidadeId;
 
-    await usersService.create({
-      uid,
-      nome,
-      email,
-      unidadeId: targetUnidade,
-      role,
-    });
+    await usersService.create(
+      {
+        uid,
+        nome,
+        email,
+        role,
+      },
+      targetUnidade,
+    );
 
-    return res.status(201).send();
+    return res.status(201).json({
+      success: true,
+      message: "Usuário criado com sucesso.",
+    });
   }
 
   // Atualiza status ou permissão
@@ -70,6 +83,9 @@ export class UsersController {
     // Passa o id (quem), data (o que) e adminUser.unidadeId (validação de segurança)
     await usersService.update(id, data, adminUser.unidadeId);
 
-    return res.status(204).send();
+    return res.status(200).json({
+      success: true,
+      message: "Usuário atualizado com sucesso.",
+    });
   }
 }

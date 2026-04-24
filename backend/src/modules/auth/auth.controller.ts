@@ -1,9 +1,5 @@
 import { Response } from "express";
-import { UsersService } from "../users/users.service";
 import { AuthRequest } from "../../middleware/auth.middleware";
-import { AppError } from "../../utils/AppError";
-
-const usersService = new UsersService();
 
 export class AuthController {
   /**
@@ -13,15 +9,25 @@ export class AuthController {
   // backend/src/modules/auth/auth.controller.ts
 
   async me(req: AuthRequest, res: Response) {
-    try {
-      if (!req.user) {
-        return res.status(403).json({ error: "Perfil não carregado" });
-      }
-
-      // Retorna os dados que o middleware buscou no Firestore
-      return res.json(req.user);
-    } catch (error) {
-      return res.status(500).json({ error: "Erro interno ao buscar perfil" });
+    // O middleware de autenticação já garante que req.user exista.
+    // Se não existir, o middleware já terá retornado um erro 401 ou 403.
+    if (!req.user) {
+      // Esta verificação é uma segurança extra, mas não deve ser alcançada.
+      return res
+        .status(403)
+        .json({
+          success: false,
+          message: "Perfil de usuário não encontrado na requisição.",
+        });
     }
+
+    // Retorna os dados que o middleware 'authMiddleware' anexou ao objeto 'req'
+    return res
+      .status(200)
+      .json({
+        success: true,
+        data: req.user,
+        message: "Perfil recuperado com sucesso.",
+      });
   }
 }

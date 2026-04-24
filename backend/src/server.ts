@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import { errorMiddleware } from "./middleware/error.middleware";
 import routes from "./routes";
+import { setupSwagger } from "./config/swagger";
 import "./config/firebase"; // Garante a inicialização do Firebase
 
 // Configura Express
@@ -16,6 +17,7 @@ app.use(
 app.use(express.json());
 
 // Define as Rotas
+setupSwagger(app);
 app.use("/api", routes);
 
 // Middlewares de Erro (Sempre por último)

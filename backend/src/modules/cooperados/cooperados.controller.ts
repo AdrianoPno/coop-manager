@@ -12,22 +12,28 @@ export class CooperadosController {
     if (!req.user) throw new AppError("Não autorizado", 401);
 
     const user = await usersService.getById(req.user.uid);
-    console.log("Usuário encontrado no Firestore:", user);
     if (!user) throw new AppError("Usuário não encontrado", 404);
 
     const cooperados = await cooperadosService.listByUnidade(user.unidadeId);
-    return res.json(cooperados);
+    return res.status(200).json({
+      success: true,
+      data: cooperados,
+      message: "Cooperados listados com sucesso.",
+    });
   }
 
   async store(req: AuthRequest, res: Response) {
     if (!req.user) throw new AppError("Não autorizado", 401);
 
     const user = await usersService.getById(req.user.uid);
-    console.log("Usuário encontrado no Firestore:", user);
     if (!user) throw new AppError("Usuário não encontrado", 404);
 
     const id = await cooperadosService.create(req.body, user.unidadeId);
-    return res.status(201).json({ id });
+    return res.status(201).json({
+      success: true,
+      data: { id },
+      message: "Cooperado criado com sucesso.",
+    });
   }
 
   async update(req: AuthRequest, res: Response) {
@@ -42,11 +48,13 @@ export class CooperadosController {
     if (!req.user) throw new AppError("Não autorizado", 401);
 
     const user = await usersService.getById(req.user.uid);
-    console.log("Usuário encontrado no Firestore:", user);
     if (!user) throw new AppError("Usuário não encontrado", 404);
 
     await cooperadosService.update(id, data, user.unidadeId);
 
-    return res.status(204).send();
+    return res.status(200).json({
+      success: true,
+      message: "Cooperado atualizado com sucesso.",
+    });
   }
 }

@@ -49,7 +49,7 @@ export class UsersService {
   /**
    * Cria o perfil do usuário no Firestore usando o UID gerado pelo Auth
    */
-  async create(data: ICreateUserDTO): Promise<void> {
+  async create(data: ICreateUserDTO, unidadeId: string): Promise<void> {
     const userRef = this.collection.doc(data.uid);
     const doc = await userRef.get();
 
@@ -59,6 +59,7 @@ export class UsersService {
 
     const newUser: Omit<IUser, "id"> = {
       ...data,
+      unidadeId,
       ativo: true,
       createdAt: new Date(),
     };
