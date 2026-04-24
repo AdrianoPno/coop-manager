@@ -1,0 +1,62 @@
+# =========================
+# DEPENDÊNCIAS
+# =========================
+node_modules/
+*/node_modules/
+
+# =========================
+# BUILD
+# =========================
+dist/
+build/
+out/
+*/dist/
+*/build/
+
+# =========================
+# AMBIENTE
+# =========================
+.env
+.env.*
+*/.env
+
+# =========================
+# LOGS
+# =========================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# =========================
+# SISTEMA OPERACIONAL
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# TYPESCRIPT
+# =========================
+*.tsbuildinfo
+
+# =========================
+# VSCODE / IDE
+# =========================
+.vscode/
+.idea/
+*.iml
+
+# =========================
+# CACHE / FERRAMENTAS
+# =========================
+.eslintcache
+.cache/
+.vite/
+frontend/.vite/
+
+# =========================
+# FIREBASE
+# =========================
+.firebase/
+serviceAccountKey.json
