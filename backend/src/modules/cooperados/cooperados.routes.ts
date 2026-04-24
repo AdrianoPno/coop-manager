@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { authMiddleware } from "../../middleware/auth.middleware.js";
-import { CooperadosController } from "./cooperados.controller.js";
+import { authMiddleware } from "../../middleware/auth.middleware";
+import { CooperadosController } from "./cooperados.controller";
 
 const router = Router();
 const controller = new CooperadosController();

@@ -1,6 +1,7 @@
 import React, { createContext, useEffect, useContext } from "react";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 import { useAuthStore } from "../store/useAuthStore";
+import { auth } from "../services/firebase"; // IMPORTANTE: Importe a instância já inicializada
 import api from "../services/api";
 
 const AuthContext = createContext({});
@@ -11,17 +12,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const { setUser, setLoading, logout } = useAuthStore();
 
   useEffect(() => {
-    const auth = getAuth();
-
     // Listener oficial do Firebase para persistência de sessão
+    // Usamos a instância 'auth' que já vem do initializeApp
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
         if (firebaseUser) {
-          // 1. O usuário está autenticado no Firebase, agora buscamos o perfil (unidadeId, role) no nosso Backend
+          // 1. Obtemos o Token atualizado para garantir que as chamadas à API funcionem
+          const token = await firebaseUser.getIdToken();
+
+          // Opcional: Atualizar o header do axios caso não esteja no interceptor
+          api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+          // 2. Buscamos o perfil (unidadeId, role) no nosso Backend
           const { data } = await api.get("/auth/me");
           setUser(data);
         } else {
-          // 2. Não há usuário logado
           logout();
         }
       } catch (error) {

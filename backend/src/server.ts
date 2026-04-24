@@ -1,20 +1,25 @@
 import express from "express";
 import cors from "cors";
-import { errorMiddleware } from "./middleware/error.middleware.js";
-import usersRoutes from "./modules/users/users.routes.js";
-import routes from "./routes.js";
+import { errorMiddleware } from "./middleware/error.middleware";
+import routes from "./routes";
+import "./config/firebase"; // Garante a inicialização do Firebase
 
+// Configura Express
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173", // URL do seu Vite
+    credentials: true,
+  }),
+);
 app.use(express.json());
 
-// Prefixo opcional para versionamento ou organização
+// Define as Rotas
 app.use("/api", routes);
 
+// Middlewares de Erro (Sempre por último)
 app.use(errorMiddleware);
-
-routes.use("/users", usersRoutes);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

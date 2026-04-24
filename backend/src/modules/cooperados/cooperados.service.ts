@@ -1,10 +1,10 @@
-import { db } from "../../config/firebase.js";
-import { AppError } from "../../utils/AppError.js";
+import { db } from "../../config/firebase";
+import { AppError } from "../../utils/AppError";
 import {
   ICooperado,
   ICreateCooperadoDTO,
   IUpdateCooperadoDTO,
-} from "./cooperado.types.js";
+} from "./cooperado.types";
 
 export class CooperadosService {
   private collection = db.collection("cooperados");

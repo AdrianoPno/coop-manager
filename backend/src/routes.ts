@@ -1,7 +1,7 @@
 import { Router } from "express";
-import authRoutes from "./modules/auth/auth.routes.js";
-import cooperadosRoutes from "./modules/cooperados/cooperados.routes.js";
-import usersRoutes from "./modules/users/users.routes.js";
+import authRoutes from "./modules/auth/auth.routes";
+import cooperadosRoutes from "./modules/cooperados/cooperados.routes";
+import usersRoutes from "./modules/users/users.routes";
 
 const routes = Router();
 

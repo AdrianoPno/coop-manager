@@ -1,6 +1,6 @@
-import { db } from "../../config/firebase.js";
-import { AppError } from "../../utils/AppError.js";
-import { IUser } from "../users/usuario.types.js";
+import { db } from "../../config/firebase";
+import { AppError } from "../../utils/AppError";
+import { IUser } from "../users/usuario.types";
 
 export class UsersService {
   private collection = db.collection("users");
