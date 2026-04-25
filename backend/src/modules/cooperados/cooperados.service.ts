@@ -34,18 +34,30 @@ export class CooperadosService {
   }
 
   async create(data: ICreateCooperadoDTO, user: AuthUser): Promise<string> {
-    if (!user.unidadeId && user.role !== "SUPER") {
-      throw new AppError("Unidade não identificada para criação.", 400);
-    }
+    let unidadeIdParaCriacao: string | undefined;
 
-    // Regra: Se for ADMIN, usa a unidade dele.
-    // Se for SUPER, usa a unidade vinda do body (data.unidadeId)
-    const unidadeId =
-      user.role === "SUPER" ? (data as any).unidadeId : user.unidadeId;
+    if (user.role === "SUPER") {
+      // Para SUPER, a unidadeId DEVE vir no corpo da requisição.
+      unidadeIdParaCriacao = (data as any).unidadeId;
+      if (!unidadeIdParaCriacao) {
+        throw new AppError(
+          "Usuário SUPER deve especificar a 'unidadeId' no corpo da requisição para criar um registro.",
+          400,
+        );
+      }
+    } else if (user.role === "ADMIN") {
+      // Para ADMIN, a unidadeId é extraída do seu token.
+      unidadeIdParaCriacao = user.unidadeId;
+      if (!unidadeIdParaCriacao) {
+        throw new AppError("Usuário admin sem unidade associada.", 400);
+      }
+    } else {
+      throw new AppError("Acesso negado. Permissão insuficiente.", 403);
+    }
 
     const newDoc: Omit<ICooperado, "id"> = {
       ...data,
-      unidadeId,
+      unidadeId: unidadeIdParaCriacao,
       criadoEm: new Date(),
       atualizadoEm: new Date(),
     };

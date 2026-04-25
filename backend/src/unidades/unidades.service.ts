@@ -1,5 +1,5 @@
-import { db } from "../../config/firebase";
-import { AppError } from "../../utils/AppError";
+import { db } from "../config/firebase";
+import { AppError } from "../utils/AppError";
 import {
   IUnidade,
   ICreateUnidadeDTO,

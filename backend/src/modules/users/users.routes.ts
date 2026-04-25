@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { UsersController } from "./users.controller";
 import { authMiddleware } from "../../middleware/auth.middleware";
-import { adminOnly } from "../../middleware/adminOnly.middleware";
+import { checkRoles } from "../../middleware/role.middleware";
 import { validate } from "../../middleware/validate.middleware";
 import {
   createUserSchema,
@@ -12,7 +12,7 @@ import {
 const router = Router();
 const controller = new UsersController();
 
-router.use(authMiddleware, adminOnly);
+router.use(authMiddleware, checkRoles(["SUPER", "ADMIN"]));
 
 /**
  * @openapi

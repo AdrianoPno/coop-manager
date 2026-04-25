@@ -3,20 +3,27 @@ import { AppError } from "../../utils/AppError";
 import { getAuth } from "firebase-admin/auth";
 import { IUser, ICreateUserDTO, IUpdateUserDTO } from "./usuario.types";
 
+interface AuthUser {
+  role: "SUPER" | "ADMIN" | "USER";
+  unidadeId?: string;
+}
+
 export class UsersService {
   private collection = db.collection("users");
 
-  /**
-   * Busca usuário pelo ID (UID do Firebase)
-   */
-  async getById(uid: string): Promise<IUser> {
+  async getById(uid: string, user: AuthUser): Promise<IUser> {
     const doc = await this.collection.doc(uid).get();
 
     if (!doc.exists) {
-      throw new AppError("Usuário não encontrado no sistema.", 404);
+      throw new AppError("Usuário não encontrado.", 404);
     }
 
     const data = doc.data();
+
+    // Multi-tenant: ADMIN só vê usuários da própria unidade
+    if (user.role === "ADMIN" && data?.unidadeId !== user.unidadeId) {
+      throw new AppError("Acesso negado: usuário de outra unidade.", 403);
+    }
 
     return {
       id: doc.id,
@@ -27,13 +34,17 @@ export class UsersService {
     } as IUser;
   }
 
-  /**
-   * Lista usuários filtrando obrigatoriamente pela unidade do Admin logado
-   */
-  async listByUnidade(unidadeId: string): Promise<IUser[]> {
-    const snapshot = await this.collection
-      .where("unidadeId", "==", unidadeId)
-      .get();
+  async list(user: AuthUser): Promise<IUser[]> {
+    let query: FirebaseFirestore.Query = this.collection;
+
+    // Se for ADMIN, filtra. Se for SUPER, não entra aqui e traz tudo.
+    if (user.role === "ADMIN") {
+      if (!user.unidadeId)
+        throw new AppError("Admin sem unidade vinculada.", 400);
+      query = query.where("unidadeId", "==", user.unidadeId);
+    }
+
+    const snapshot = await query.get();
 
     return snapshot.docs.map((doc) => {
       const data = doc.data();
@@ -47,20 +58,25 @@ export class UsersService {
     });
   }
 
-  /**
-   * Cria o perfil do usuário no Firestore usando o UID gerado pelo Auth
-   */
-  async create(data: ICreateUserDTO, unidadeId: string): Promise<void> {
+  async create(data: ICreateUserDTO, user: AuthUser): Promise<void> {
     const userRef = this.collection.doc(data.uid);
     const doc = await userRef.get();
 
     if (doc.exists) {
-      throw new AppError("Este usuário já possui um perfil cadastrado.", 400);
+      throw new AppError("Este usuário já possui um perfil.", 400);
+    }
+
+    // Define a unidade: ADMIN força a dele, SUPER usa a que vier no body (data)
+    const finalUnidadeId =
+      user.role === "SUPER" ? data.unidadeId : user.unidadeId;
+
+    if (!finalUnidadeId) {
+      throw new AppError("unidadeId é obrigatório para o cadastro.", 400);
     }
 
     const newUser: Omit<IUser, "id"> = {
       ...data,
-      unidadeId,
+      unidadeId: finalUnidadeId,
       ativo: true,
       createdAt: new Date(),
     };
@@ -68,23 +84,18 @@ export class UsersService {
     await userRef.set(newUser);
   }
 
-  /**
-   * Atualiza dados do usuário com trava de segurança por unidade
-   */
   async update(
     uid: string,
     data: IUpdateUserDTO,
-    adminUnidadeId: string,
+    user: AuthUser,
   ): Promise<void> {
     const userRef = this.collection.doc(uid);
     const doc = await userRef.get();
 
-    if (!doc.exists) {
-      throw new AppError("Usuário não encontrado.", 404);
-    }
+    if (!doc.exists) throw new AppError("Usuário não encontrado.", 404);
 
-    // Validação Sênior: Admin só edita usuários da sua unidade
-    if (doc.data()?.unidadeId !== adminUnidadeId) {
+    // Trava de segurança: SUPER ignora, ADMIN só edita a própria unidade
+    if (user.role === "ADMIN" && doc.data()?.unidadeId !== user.unidadeId) {
       throw new AppError(
         "Acesso negado: usuário pertence a outra unidade.",
         403,
@@ -97,38 +108,24 @@ export class UsersService {
     });
   }
 
-  /**
-   * Exclui um usuário do Firestore e do Firebase Authentication.
-   */
-  async delete(uid: string, adminUnidadeId: string): Promise<void> {
+  async delete(uid: string, user: AuthUser): Promise<void> {
     const userRef = this.collection.doc(uid);
     const doc = await userRef.get();
 
-    if (!doc.exists) {
-      throw new AppError("Usuário não encontrado.", 404);
+    if (!doc.exists) throw new AppError("Usuário não encontrado.", 404);
+
+    // Trava de segurança
+    if (user.role === "ADMIN" && doc.data()?.unidadeId !== user.unidadeId) {
+      throw new AppError("Acesso negado.", 403);
     }
 
-    // Validação Sênior: Admin só exclui usuários da sua unidade
-    if (doc.data()?.unidadeId !== adminUnidadeId) {
-      throw new AppError(
-        "Acesso negado: usuário pertence a outra unidade.",
-        403,
-      );
-    }
-
-    // Exclui do Firestore
     await userRef.delete();
 
-    // Exclui do Firebase Authentication
     try {
       await getAuth().deleteUser(uid);
     } catch (error: any) {
-      if (error.code === "auth/user-not-found") {
-        console.warn(
-          `Usuário com UID ${uid} já havia sido removido do Firebase Auth.`,
-        );
-      } else {
-        throw new AppError("Falha ao remover o usuário da autenticação.", 500);
+      if (error.code !== "auth/user-not-found") {
+        throw new AppError("Falha ao remover do Firebase Auth.", 500);
       }
     }
   }

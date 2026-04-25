@@ -56,7 +56,7 @@ export const authMiddleware = async (
       uid: decodedToken.uid,
       email: decodedToken.email,
       nome: userData?.nome, // Adicionado para o Topbar
-      role: userData?.role || "USER",
+      role: (userData?.role as "SUPER" | "ADMIN" | "USER") || "USER",
       unidadeId: userData?.unidadeId,
       unidadeNome: unidadeNome,
     };
