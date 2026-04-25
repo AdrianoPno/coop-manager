@@ -7,10 +7,8 @@ const cooperadosService = new CooperadosService();
 
 export class CooperadosController {
   async index(req: AuthRequest, res: Response) {
-    const unidadeId = req.user?.unidadeId;
-    if (!unidadeId) throw new AppError("Usuário sem unidade associada.", 400);
-
-    const cooperados = await cooperadosService.listByUnidade(unidadeId);
+    // O service agora lida com a lógica de role (ADMIN vs SUPER)
+    const cooperados = await cooperadosService.list(req.user!);
 
     return res.status(200).json({
       success: true,
@@ -20,13 +18,10 @@ export class CooperadosController {
   }
 
   async show(req: AuthRequest, res: Response) {
-    const unidadeId = req.user?.unidadeId;
-    if (!unidadeId) throw new AppError("Usuário sem unidade associada.", 400);
-
     // Pegando do local seguro (Zod)
     const { id } = res.locals.validatedData.params;
 
-    const cooperado = await cooperadosService.getById(id, unidadeId);
+    const cooperado = await cooperadosService.getById(id, req.user!);
 
     return res.status(200).json({
       success: true,
@@ -36,13 +31,11 @@ export class CooperadosController {
   }
 
   async store(req: AuthRequest, res: Response) {
-    const unidadeId = req.user?.unidadeId;
-    if (!unidadeId) throw new AppError("Usuário sem unidade associada.", 400);
-
     // Dados limpos pelo Zod
     const { body } = res.locals.validatedData;
 
-    const id = await cooperadosService.create(body, unidadeId);
+    // Passa o objeto 'user' inteiro para o service lidar com a lógica de multi-tenancy
+    const id = await cooperadosService.create(body, req.user!);
 
     return res.status(201).json({
       success: true,
@@ -52,13 +45,10 @@ export class CooperadosController {
   }
 
   async update(req: AuthRequest, res: Response) {
-    const unidadeId = req.user?.unidadeId;
-    if (!unidadeId) throw new AppError("Usuário sem unidade associada.", 400);
-
     // Destruturação dos dados validados
     const { params, body } = res.locals.validatedData;
 
-    await cooperadosService.update(params.id, body, unidadeId);
+    await cooperadosService.update(params.id, body, req.user!);
 
     return res.status(200).json({
       success: true,
@@ -67,12 +57,9 @@ export class CooperadosController {
   }
 
   async delete(req: AuthRequest, res: Response) {
-    const unidadeId = req.user?.unidadeId;
-    if (!unidadeId) throw new AppError("Usuário sem unidade associada.", 400);
-
     const { id } = res.locals.validatedData.params;
 
-    await cooperadosService.delete(id, unidadeId);
+    await cooperadosService.delete(id, req.user!);
 
     return res.status(200).json({
       success: true,

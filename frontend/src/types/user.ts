@@ -1,10 +1,11 @@
-export type UserRole = "ADMIN" | "USER";
+export type UserRole = "SUPER" | "ADMIN" | "USER"; // Adicionado SUPER
 
 export interface IUser {
-  uid: string; // UID vindo do Firebase Auth
+  uid: string;
   nome: string;
   email: string;
-  unidadeId: string; // Essencial para filtrar dados na UI se necessário
+  unidadeId?: string; // Opcional: SUPER pode não ter uma unidade fixa
+  unidadeNome?: string; // Adicionado: Essencial para a Topbar
   role: UserRole;
   ativo: boolean;
   createdAt: string | Date;
@@ -12,10 +13,9 @@ export interface IUser {
 }
 
 /**
- * Interface para representar o estado simplificado
- * caso você precise de um perfil resumido em algum componente
+ * Perfil resumido para contextos de UI (Topbar, Profile Card)
  */
 export interface IUserProfile extends Pick<
   IUser,
-  "nome" | "email" | "role" | "unidadeId"
+  "nome" | "email" | "role" | "unidadeId" | "unidadeNome"
 > {}
