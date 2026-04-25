@@ -1,7 +1,7 @@
 import { Response } from "express";
-import { AuthRequest } from "../../middleware/auth.middleware";
-import { AppError } from "../../utils/AppError";
-import { UsersService } from "./users.service";
+import { AuthRequest } from "../../middleware/auth.middleware.js";
+import { AppError } from "../../utils/AppError.js";
+import { UsersService } from "./users.service.js";
 
 const usersService = new UsersService();
 

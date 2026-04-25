@@ -1,16 +1,14 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "NodeNext", // Garante suporte a import/export nativo
+    "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "strict": true,
+    "isolatedModules": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "rootDirs": ["src"]
+    "outDir": "./dist",
+    "strict": true,
+    "rootDirs": ["src", "tests"]
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+  "include": ["src/**/*", "tests/**/*"]
 }
