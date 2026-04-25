@@ -1,4 +1,4 @@
-import type { ICooperado } from "../types/cooperado";
+import type { ICooperado } from "../types/cooperado.types";
 import api from "./api";
 
 // Tipos para as requisições (Data Transfer Objects no Front)

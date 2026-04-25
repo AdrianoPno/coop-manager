@@ -1,21 +1,17 @@
 import { Response } from "express";
 import { AuthRequest } from "../../middleware/auth.middleware";
 import { AppError } from "../../utils/AppError";
-import { UsersService } from "../users/users.service";
 import { CooperadosService } from "./cooperados.service";
 
 const cooperadosService = new CooperadosService();
-const usersService = new UsersService();
 
 export class CooperadosController {
   async index(req: AuthRequest, res: Response) {
-    if (!req.user?.unidadeId) {
-      throw new AppError("Usuário não está associado a uma unidade.", 400);
-    }
+    const unidadeId = req.user?.unidadeId;
+    if (!unidadeId) throw new AppError("Usuário sem unidade associada.", 400);
 
-    const cooperados = await cooperadosService.listByUnidade(
-      req.user.unidadeId,
-    );
+    const cooperados = await cooperadosService.listByUnidade(unidadeId);
+
     return res.status(200).json({
       success: true,
       data: cooperados,
@@ -24,17 +20,13 @@ export class CooperadosController {
   }
 
   async show(req: AuthRequest, res: Response) {
-    const { id } = req.params;
+    const unidadeId = req.user?.unidadeId;
+    if (!unidadeId) throw new AppError("Usuário sem unidade associada.", 400);
 
-    if (typeof id !== "string") {
-      throw new AppError("ID do cooperado inválido.", 400);
-    }
+    // Pegando do local seguro (Zod)
+    const { id } = res.locals.validatedData.params;
 
-    if (!req.user?.unidadeId) {
-      throw new AppError("Usuário não está associado a uma unidade.", 400);
-    }
-
-    const cooperado = await cooperadosService.getById(id, req.user.unidadeId);
+    const cooperado = await cooperadosService.getById(id, unidadeId);
 
     return res.status(200).json({
       success: true,
@@ -44,11 +36,14 @@ export class CooperadosController {
   }
 
   async store(req: AuthRequest, res: Response) {
-    if (!req.user?.unidadeId) {
-      throw new AppError("Usuário não está associado a uma unidade.", 400);
-    }
+    const unidadeId = req.user?.unidadeId;
+    if (!unidadeId) throw new AppError("Usuário sem unidade associada.", 400);
 
-    const id = await cooperadosService.create(req.body, req.user.unidadeId);
+    // Dados limpos pelo Zod
+    const { body } = res.locals.validatedData;
+
+    const id = await cooperadosService.create(body, unidadeId);
+
     return res.status(201).json({
       success: true,
       data: { id },
@@ -57,18 +52,13 @@ export class CooperadosController {
   }
 
   async update(req: AuthRequest, res: Response) {
-    const { id } = req.params;
-    const data = req.body;
+    const unidadeId = req.user?.unidadeId;
+    if (!unidadeId) throw new AppError("Usuário sem unidade associada.", 400);
 
-    if (typeof id !== "string") {
-      throw new AppError("ID do cooperado inválido.", 400);
-    }
+    // Destruturação dos dados validados
+    const { params, body } = res.locals.validatedData;
 
-    if (!req.user?.unidadeId) {
-      throw new AppError("Usuário não está associado a uma unidade.", 400);
-    }
-
-    await cooperadosService.update(id, data, req.user.unidadeId);
+    await cooperadosService.update(params.id, body, unidadeId);
 
     return res.status(200).json({
       success: true,
@@ -77,17 +67,12 @@ export class CooperadosController {
   }
 
   async delete(req: AuthRequest, res: Response) {
-    const { id } = req.params;
+    const unidadeId = req.user?.unidadeId;
+    if (!unidadeId) throw new AppError("Usuário sem unidade associada.", 400);
 
-    if (typeof id !== "string") {
-      throw new AppError("ID do cooperado inválido.", 400);
-    }
+    const { id } = res.locals.validatedData.params;
 
-    if (!req.user?.unidadeId) {
-      throw new AppError("Usuário não está associado a uma unidade.", 400);
-    }
-
-    await cooperadosService.delete(id, req.user.unidadeId);
+    await cooperadosService.delete(id, unidadeId);
 
     return res.status(200).json({
       success: true,

@@ -40,7 +40,13 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // Opcional: Lógica para deslogar o usuário se o token falhar no backend
-      console.error("Sessão expirada ou não autorizada");
+      // Isso é útil se o token expirar e o Firebase ainda não o atualizou.
+      console.error(
+        "Sessão expirada ou não autorizada. Redirecionando para o login.",
+      );
+      // Para deslogar globalmente, você pode disparar um evento customizado
+      // que o seu AuthProvider escuta para chamar a função de logout.
+      window.dispatchEvent(new Event("auth-error"));
     }
     return Promise.reject(error);
   },

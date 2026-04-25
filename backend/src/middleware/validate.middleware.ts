@@ -1,27 +1,47 @@
 import { Request, Response, NextFunction } from "express";
 import { AnyZodObject, ZodError } from "zod";
-import { ValidationError } from "../utils/ValidationError";
 
 export const validate =
   (schema: AnyZodObject) =>
   async (req: Request, res: Response, next: NextFunction) => {
+    // LOG DE ENTRADA: Se isso não aparecer, a requisição nem chegou aqui!
+    console.log(
+      `\n🔍 [VALIDATE] Recebendo ${req.method} para ${req.originalUrl}`,
+    );
+    console.log(`📦 [PARAMS]:`, req.params);
+
     try {
-      const parsed = await schema.parseAsync({
+      const validatedData = await schema.parseAsync({
         body: req.body,
         query: req.query,
         params: req.params,
       });
 
-      // Substitui os dados da requisição pelos dados validados e transformados pelo Zod
-      req.body = parsed.body;
-      req.query = parsed.query;
-      req.params = parsed.params;
+      console.log(`✅ [VALIDATE] Sucesso!`);
+      // Anexa os dados validados ao res.locals para uso no controller,
+      // evitando a mutação do objeto `req` que causa o erro.
+      res.locals.validatedData = validatedData;
 
       return next();
     } catch (error) {
       if (error instanceof ZodError) {
-        throw new ValidationError(error.issues);
+        // LOG DE ERRO DETALHADO
+        console.log(
+          "❌ [ERRO DE VALIDAÇÃO]:",
+          JSON.stringify(error.flatten().fieldErrors, null, 2),
+        );
+
+        return res.status(400).json({
+          success: false,
+          message: "Dados inválidos.",
+          errors: error.flatten().fieldErrors,
+        });
       }
-      return next(error);
+
+      console.error("🔥 [SYSTEM ERROR]:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Erro interno no servidor.",
+      });
     }
   };

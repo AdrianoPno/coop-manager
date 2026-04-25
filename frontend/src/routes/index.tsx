@@ -1,11 +1,4 @@
-import { Navigate } from "react-router-dom";
-import { useAuthStore } from "../store/useAuthStore";
-import type { JSX } from "react";
+import { createBrowserRouter } from "react-router-dom";
+import { routes } from "./AppRoutes";
 
-export const PrivateRoute = ({ children }: { children: JSX.Element }) => {
-  const { isAuthenticated, isLoading } = useAuthStore();
-
-  if (isLoading) return <div>Carregando...</div>;
-
-  return isAuthenticated ? children : <Navigate to="/login" />;
-};
+export const router = createBrowserRouter(routes);

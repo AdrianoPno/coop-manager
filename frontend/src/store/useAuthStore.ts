@@ -1,49 +1,25 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
-import type { IUser } from "../types/user";
+
+interface User {
+  uid: string;
+  email: string;
+  nome?: string;
+  role?: string;
+  unidadeId?: string;
+}
 
 interface AuthState {
-  user: IUser | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-
-  // Actions
-  setUser: (user: IUser | null) => void;
-  setLoading: (loading: boolean) => void;
+  user: User | null;
+  loading: boolean; // ADICIONE ESTA LINHA
+  setUser: (user: User | null) => void;
+  setLoading: (loading: boolean) => void; // ADICIONE ESTA LINHA
   logout: () => void;
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      user: null,
-      isAuthenticated: false,
-      isLoading: true,
-
-      setUser: (user) =>
-        set({
-          user,
-          isAuthenticated: !!user,
-          isLoading: false,
-        }),
-
-      setLoading: (loading) => set({ isLoading: loading }),
-
-      logout: () =>
-        set({
-          user: null,
-          isAuthenticated: false,
-          isLoading: false,
-        }),
-    }),
-    {
-      name: "@coop-manager:auth", // Nome da chave no localStorage
-      storage: createJSONStorage(() => localStorage),
-      // Opcional: Persistir apenas o campo 'user'
-      partialize: (state) => ({
-        user: state.user,
-        isAuthenticated: state.isAuthenticated,
-      }),
-    },
-  ),
-);
+export const useAuthStore = create<AuthState>((set) => ({
+  user: null,
+  loading: true, // Começa como true para o listener do Firebase trabalhar
+  setUser: (user) => set({ user, loading: false }),
+  setLoading: (loading) => set({ loading }),
+  logout: () => set({ user: null, loading: false }),
+}));
