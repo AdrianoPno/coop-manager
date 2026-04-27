@@ -17,7 +17,7 @@ import {
   Alert,
   AlertTitle,
 } from "@mui/material";
-import { Plus as Add, Pencil as Edit } from "lucide-react";
+import { Plus as Add, Edit } from "lucide-react";
 import { useCooperados } from "../../hooks/useCooperados";
 import { PageContainer } from "../../components/layout/PageContainer";
 import { CooperadoForm } from "./components/CooperadosForm";
@@ -86,11 +86,7 @@ const CooperadosPage: React.FC = () => {
       title="Cooperados"
       subtitle="Gestão de membros e registros da unidade"
       action={
-        <Button
-          variant="contained"
-          startIcon={<Add size={20} />}
-          onClick={handleCreate}
-        >
+        <Button variant="contained" startIcon={<Add />} onClick={handleCreate}>
           Novo Cooperado
         </Button>
       }
@@ -105,8 +101,7 @@ const CooperadosPage: React.FC = () => {
             sx: {
               width: "100%",
               maxWidth: 500,
-              p: 4,
-              borderRadius: "16px 0 0 16px",
+              p: 3,
             },
           },
         }}
@@ -125,15 +120,7 @@ const CooperadosPage: React.FC = () => {
       </Drawer>
 
       {/* Tabela de Resultados */}
-      <Paper
-        sx={{
-          borderRadius: 4,
-          overflow: "hidden",
-          elevation: 0,
-          border: "1px solid",
-          borderColor: "divider",
-        }}
-      >
+      <Paper sx={{ overflow: "hidden" }}>
         <TableContainer>
           <Table stickyHeader aria-label="tabela de cooperados">
             <TableHead>
@@ -195,10 +182,6 @@ const CooperadosPage: React.FC = () => {
                         color="primary"
                         onClick={() => handleEdit(cooperado.id)}
                         size="small"
-                        sx={{
-                          backgroundColor: "#f0f2ff",
-                          "&:hover": { backgroundColor: "#e0e4ff" },
-                        }}
                       >
                         <Edit size={18} />
                       </IconButton>

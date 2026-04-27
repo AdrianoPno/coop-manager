@@ -41,11 +41,7 @@ const UnidadesPage: React.FC = () => {
       title="Gestão de Unidades"
       subtitle="Gerencie as bases operacionais e centros de coleta da cooperativa."
       action={
-        <Button
-          variant="contained"
-          startIcon={<Add size={20} />}
-          onClick={handleCreate}
-        >
+        <Button variant="contained" startIcon={<Add />} onClick={handleCreate}>
           Nova Unidade
         </Button>
       }
@@ -55,7 +51,6 @@ const UnidadesPage: React.FC = () => {
         anchor="right"
         open={isDrawerOpen}
         onClose={handleCloseDrawer}
-        // Padronizado com a página de Cooperados
         slotProps={{
           paper: {
             sx: {

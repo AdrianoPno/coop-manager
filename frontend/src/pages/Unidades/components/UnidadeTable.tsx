@@ -11,7 +11,7 @@ import {
   IconButton,
   Typography,
 } from "@mui/material";
-import { Pencil as Edit } from "lucide-react";
+import { Edit } from "lucide-react";
 import { IUnidade } from "../../../types/unidade.types";
 
 interface UnidadeTableProps {
@@ -53,10 +53,6 @@ export const UnidadeTable: React.FC<UnidadeTableProps> = ({
                       color="primary"
                       size="small"
                       onClick={() => onEdit(unidade.id)}
-                      sx={{
-                        backgroundColor: "#f0f2ff",
-                        "&:hover": { backgroundColor: "#e0e4ff" },
-                      }}
                     >
                       <Edit size={18} />
                     </IconButton>
