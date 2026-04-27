@@ -1,4 +1,4 @@
-export type UserRole = "ADMIN" | "USER";
+export type UserRole = "SUPER" | "ADMIN" | "USER";
 
 /**
  * @openapi
@@ -6,7 +6,7 @@ export type UserRole = "ADMIN" | "USER";
  *   schemas:
  *     UserRole:
  *       type: string
- *       enum: [ADMIN, USER]
+ *       enum: [SUPER, ADMIN, USER]
  *     IUser:
  *       type: object
  *       properties:
@@ -36,6 +36,7 @@ export interface IUser {
   nome: string;
   email: string;
   unidadeId: string; // Chave mestra para o isolamento multi-tenant
+  unidadeNome?: string; // Nome da unidade, populado pelo back-end para exibição no front-end
   role: UserRole;
   ativo: boolean;
   createdAt: Date;

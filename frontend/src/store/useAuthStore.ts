@@ -1,18 +1,26 @@
 import { create } from "zustand";
 
-interface User {
+// Tipagem alinhada com o backend (IUser em usuario.types.ts)
+export type UserRole = "SUPER" | "ADMIN" | "USER";
+
+export interface User {
+  id?: string;
   uid: string;
+  nome: string;
   email: string;
-  nome?: string;
-  role?: string;
-  unidadeId?: string;
+  unidadeId: string;
+  unidadeNome?: string; // Populado pelo backend
+  role: UserRole;
+  ativo: boolean;
+  createdAt: string; // Datas via JSON são strings
+  updatedAt?: string;
 }
 
 interface AuthState {
   user: User | null;
-  loading: boolean; // ADICIONE ESTA LINHA
+  loading: boolean;
   setUser: (user: User | null) => void;
-  setLoading: (loading: boolean) => void; // ADICIONE ESTA LINHA
+  setLoading: (loading: boolean) => void;
   logout: () => void;
 }
 

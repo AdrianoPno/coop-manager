@@ -19,15 +19,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
         if (firebaseUser) {
-          const token = await firebaseUser.getIdToken();
-
-          // Garante que o header esteja atualizado para a chamada /auth/me
-          api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
+          // O interceptor em 'services/api.ts' já é responsável por injetar
+          // o token de autorização em todas as requisições.
           const { data } = await api.get("/auth/me");
 
-          // setUser na store já deve atualizar o loading para false internamente se você seguiu o passo anterior
-          setUser(data);
+          // O 'data' da resposta da API contém { success, data, message }. O perfil está em 'data.data'.
+          setUser(data.data);
         } else {
           logout();
         }
