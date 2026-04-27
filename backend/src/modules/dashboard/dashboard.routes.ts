@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { DashboardController } from "./dashboard.controller.js";
-import { authMiddleware } from "../../middleware/auth.middleware.js";
-import { checkRoles } from "../../middleware/role.middleware.js";
+import { DashboardController } from "./dashboard.controller";
+import { authMiddleware } from "../../middleware/auth.middleware";
+import { checkRoles } from "../../middleware/role.middleware";
 
 const router = Router();
 const controller = new DashboardController();

@@ -91,7 +91,7 @@ router.post(
 /**
  * @openapi
  * /unidades/{id}:
- *   put:
+ *   patch:
  *     summary: Atualiza uma unidade
  *     description: Atualiza os dados de uma unidade existente. Acesso restrito a SUPER.
  *     tags:
@@ -114,7 +114,7 @@ router.post(
  *       '403':
  *         description: Acesso restrito a Super Administradores.
  */
-router.put(
+router.patch(
   "/:id",
   checkRoles(["SUPER"]),
   validate(updateUnidadeSchema),

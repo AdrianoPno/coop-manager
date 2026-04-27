@@ -1,6 +1,6 @@
 import { Response } from "express";
-import { AuthRequest } from "../../middleware/auth.middleware.js";
-import { DashboardService } from "./dashboard.service.js";
+import { AuthRequest } from "../../middleware/auth.middleware";
+import { DashboardService } from "./dashboard.service";
 
 export class DashboardController {
   private dashboardService = new DashboardService();

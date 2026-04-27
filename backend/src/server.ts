@@ -3,24 +3,22 @@ import cors from "cors";
 import { errorMiddleware } from "./middleware/error.middleware";
 import routes from "./routes";
 import { setupSwagger } from "./config/swagger";
-import "./config/firebase"; // Garante a inicialização do Firebase
+import "./config/firebase";
 
-// Configura Express
 const app = express();
 
 app.use(
   cors({
-    origin: "http://localhost:5173", // URL do seu Vite
-    credentials: true,
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
 app.use(express.json());
 
-// Define as Rotas
 setupSwagger(app);
 app.use("/api", routes);
 
-// Middlewares de Erro (Sempre por último)
 app.use(errorMiddleware);
 
 const PORT = process.env.PORT || 3001;

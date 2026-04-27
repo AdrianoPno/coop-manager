@@ -2,11 +2,11 @@ import { Navigate } from "react-router-dom";
 import { ProtectedRoute } from "../components/ProtectedRoute";
 import { MainLayout } from "../components/layout/MainLayout";
 
-import Login from "../pages/Login";
+import Login from "../pages/Login/LoginPage";
 import Dashboard from "../pages/Dashboard";
 import Cooperados from "../pages/Cooperados";
-import Unidades from "../pages/Unidades";
-import Usuarios from "../pages/Usuarios";
+import Unidades from "../pages/Unidades/UnidadesPage";
+import Usuarios from "../pages/Usuarios/UsuariosPage";
 
 export const routes = [
   {
@@ -25,12 +25,12 @@ export const routes = [
           { path: "cooperados", element: <Cooperados /> },
           {
             path: "unidades",
-            element: <ProtectedRoute allowedRoles={["ADMIN"]} />, // Proteção extra nível rota
+            element: <ProtectedRoute allowedRoles={["SUPER"]} />, // Apenas SUPER pode gerenciar Unidades
             children: [{ path: "", element: <Unidades /> }],
           },
           {
             path: "usuarios",
-            element: <ProtectedRoute allowedRoles={["ADMIN"]} />,
+            element: <ProtectedRoute allowedRoles={["SUPER"]} />, // Apenas SUPER pode gerenciar Usuários
             children: [{ path: "", element: <Usuarios /> }],
           },
           { path: "", element: <Navigate to="/dashboard" replace /> },

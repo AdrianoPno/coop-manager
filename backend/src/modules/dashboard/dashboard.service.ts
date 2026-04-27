@@ -19,9 +19,12 @@ export class DashboardService {
   public async getDashboardStats(user: any) {
     if (!user) throw new Error("Usuário não autenticado.");
 
-    // 1. Query Base com Filtro de Unidade (Multi-tenant)
     let query: FirebaseFirestore.Query = this.cooperadosCollection;
-    if (user.role === "ADMIN" && user.unidadeId) {
+
+    // Se NÃO for SUPER, ele OBRIGATORIAMENTE filtra por unidade
+    // Isso é mais seguro: na dúvida, restrinja.
+    if (user.role !== "SUPER") {
+      if (!user.unidadeId) throw new Error("Usuário sem unidade atribuída.");
       query = query.where("unidadeId", "==", user.unidadeId);
     }
 

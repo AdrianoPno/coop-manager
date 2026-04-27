@@ -1,6 +1,6 @@
 import React from "react";
 import { Outlet } from "react-router-dom"; // IMPORTANTE
-import { Sidebar } from "../../routes/Sidebar";
+import { Sidebar } from "./Sidebar"; // Caminho corrigido para usar o componente de layout
 import { useAuthStore } from "../../store/useAuthStore";
 
 // Remova o { children } da tipagem e da desestruturação
