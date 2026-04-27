@@ -10,8 +10,10 @@ import {
   Alert,
 } from "@mui/material";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { unidadesService } from "../../../services/unidadesService";
-import { ICreateUnidadeDTO } from "../../../types/unidade.types";
+import { unidadesService } from "../services/unidadesService";
+import { ICreateUnidadeDTO } from "../types/unidade.types";
+
+// Schema para validação
 
 const unidadeSchema = z.object({
   nome: z.string().min(3, "O nome deve ter pelo menos 3 caracteres."),
