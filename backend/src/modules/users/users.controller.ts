@@ -1,18 +1,15 @@
 import { Response } from "express";
-import { AuthRequest } from "../../middleware/auth.middleware.js";
-import { AppError } from "../../utils/AppError.js";
-import { UsersService } from "./users.service.js";
+import { AuthRequest } from "../../middleware/auth.middleware";
+import { AppError } from "../../utils/AppError";
+import { UsersService } from "./users.service";
 
 const usersService = new UsersService();
 
 export class UsersController {
-  // Lista todos os usuários da mesma unidade do ADMIN
+  // Lista usuários (Service agora decide se filtra por unidade ou traz tudo)
   async index(req: AuthRequest, res: Response) {
-    // O middleware adminOnly já garante que req.user existe e é um admin.
-    if (!req.user?.unidadeId) {
-      throw new AppError("Unidade do administrador não encontrada.", 400);
-    }
-    const users = await usersService.listByUnidade(req.user.unidadeId);
+    const users = await usersService.list(req.user!);
+
     return res.status(200).json({
       success: true,
       data: users,
@@ -20,47 +17,28 @@ export class UsersController {
     });
   }
 
-  // Cria um novo usuário vinculado a uma unidade
+  // Cria um novo usuário
   async store(req: AuthRequest, res: Response) {
-    if (!req.user?.unidadeId) {
-      throw new AppError("Unidade do administrador não encontrada.", 400);
-    }
-    const { uid, nome, email, role } = req.body;
+    // Pega dados validados do Zod (incluindo a senha)
+    const { body } = res.locals.validatedData;
 
-    // Se o admin não for super, ele só pode criar usuários para a própria unidade
-    const targetUnidade = req.user.unidadeId;
+    // Service realiza a criação atômica (Auth + Firestore) e retorna o UID
+    const newUserUid = await usersService.create(body, req.user!);
 
-    await usersService.create(
-      {
-        uid,
-        nome,
-        email,
-        role,
-      },
-      targetUnidade,
-    );
-
+    // A senha NUNCA é retornada.
     return res.status(201).json({
       success: true,
       message: "Usuário criado com sucesso.",
+      data: { uid: newUserUid }, // Retorna o UID para rastreabilidade
     });
   }
 
   // Atualiza status ou permissão
   async update(req: AuthRequest, res: Response) {
-    const { id } = req.params; // UID do usuário que será editado
-    const data = req.body;
+    const { params, body } = res.locals.validatedData;
 
-    if (typeof id !== "string") {
-      throw new AppError("ID de usuário inválido.", 400);
-    }
-
-    if (!req.user?.unidadeId) {
-      throw new AppError("Unidade do administrador não encontrada.", 400);
-    }
-
-    // Passa o id (quem), data (o que) e adminUser.unidadeId (validação de segurança)
-    await usersService.update(id, data, req.user.unidadeId);
+    // Passa o id (quem), data (o que) e req.user completo para bypass de SUPER
+    await usersService.update(params.id, body, req.user!);
 
     return res.status(200).json({
       success: true,
@@ -70,17 +48,9 @@ export class UsersController {
 
   // Exclui um usuário
   async delete(req: AuthRequest, res: Response) {
-    const { id } = req.params; // UID do usuário que será excluído
+    const { id } = res.locals.validatedData.params;
 
-    if (typeof id !== "string") {
-      throw new AppError("ID de usuário inválido.", 400);
-    }
-
-    if (!req.user?.unidadeId) {
-      throw new AppError("Unidade do administrador não encontrada.", 400);
-    }
-
-    await usersService.delete(id, req.user.unidadeId);
+    await usersService.delete(id, req.user!);
 
     return res.status(200).json({
       success: true,

@@ -11,33 +11,9 @@ interface AuthUser {
 export class UsersService {
   private collection = db.collection("users");
 
-  async getById(uid: string, user: AuthUser): Promise<IUser> {
-    const doc = await this.collection.doc(uid).get();
-
-    if (!doc.exists) {
-      throw new AppError("Usuário não encontrado.", 404);
-    }
-
-    const data = doc.data();
-
-    // Multi-tenant: ADMIN só vê usuários da própria unidade
-    if (user.role === "ADMIN" && data?.unidadeId !== user.unidadeId) {
-      throw new AppError("Acesso negado: usuário de outra unidade.", 403);
-    }
-
-    return {
-      id: doc.id,
-      ...data,
-      createdAt: data?.createdAt?.toDate
-        ? data.createdAt.toDate()
-        : data?.createdAt,
-    } as IUser;
-  }
-
   async list(user: AuthUser): Promise<IUser[]> {
     let query: FirebaseFirestore.Query = this.collection;
 
-    // Se for ADMIN, filtra. Se for SUPER, não entra aqui e traz tudo.
     if (user.role === "ADMIN") {
       if (!user.unidadeId)
         throw new AppError("Admin sem unidade vinculada.", 400);
@@ -58,30 +34,59 @@ export class UsersService {
     });
   }
 
-  async create(data: ICreateUserDTO, user: AuthUser): Promise<void> {
-    const userRef = this.collection.doc(data.uid);
-    const doc = await userRef.get();
+  async create(data: ICreateUserDTO, user: AuthUser): Promise<string> {
+    const { email, password, nome, role } = data;
 
-    if (doc.exists) {
-      throw new AppError("Este usuário já possui um perfil.", 400);
+    // 1. Regra de Negócio: Hierarquia
+    if (user.role === "ADMIN" && role !== "USER") {
+      throw new AppError("ADMINs só podem criar usuários nível USER.", 403);
     }
 
-    // Define a unidade: ADMIN força a dele, SUPER usa a que vier no body (data)
+    // 2. Determinação da Unidade
     const finalUnidadeId =
       user.role === "SUPER" ? data.unidadeId : user.unidadeId;
-
     if (!finalUnidadeId) {
-      throw new AppError("unidadeId é obrigatório para o cadastro.", 400);
+      throw new AppError("Unidade de destino não identificada.", 400);
     }
 
-    const newUser: Omit<IUser, "id"> = {
-      ...data,
-      unidadeId: finalUnidadeId,
-      ativo: true,
-      createdAt: new Date(),
-    };
+    // 3. Operação Atômica: Auth First
+    let authRecord;
+    try {
+      authRecord = await getAuth().createUser({
+        email,
+        password,
+        displayName: nome,
+      });
+    } catch (error: any) {
+      if (error.code === "auth/email-already-exists") {
+        throw new AppError("Este e-mail já está em uso.", 409);
+      }
+      throw new AppError("Erro ao criar credenciais de acesso.", 500);
+    }
 
-    await userRef.set(newUser);
+    // 4. Firestore Second + Rollback
+    try {
+      const newUser: Omit<IUser, "id"> = {
+        uid: authRecord.uid,
+        nome,
+        email,
+        role,
+        unidadeId: finalUnidadeId,
+        ativo: true,
+        createdAt: new Date(),
+      };
+
+      await this.collection.doc(authRecord.uid).set(newUser);
+      return authRecord.uid;
+    } catch (dbError) {
+      // ROLLBACK: Limpa o Auth se o banco falhar
+      console.error("🔥 Falha no Firestore. Iniciando Rollback no Auth...");
+      await getAuth().deleteUser(authRecord.uid);
+      throw new AppError(
+        "Erro ao salvar perfil. O cadastro foi cancelado.",
+        500,
+      );
+    }
   }
 
   async update(
@@ -94,10 +99,12 @@ export class UsersService {
 
     if (!doc.exists) throw new AppError("Usuário não encontrado.", 404);
 
-    // Trava de segurança: SUPER ignora, ADMIN só edita a própria unidade
-    if (user.role === "ADMIN" && doc.data()?.unidadeId !== user.unidadeId) {
+    const currentData = doc.data();
+
+    // Trava Multi-tenant: SUPER ignora, ADMIN só edita se for da mesma unidade
+    if (user.role === "ADMIN" && currentData?.unidadeId !== user.unidadeId) {
       throw new AppError(
-        "Acesso negado: usuário pertence a outra unidade.",
+        "Acesso negado: este usuário pertence a outra unidade.",
         403,
       );
     }
@@ -114,18 +121,20 @@ export class UsersService {
 
     if (!doc.exists) throw new AppError("Usuário não encontrado.", 404);
 
-    // Trava de segurança
+    // Trava de segurança para exclusão
     if (user.role === "ADMIN" && doc.data()?.unidadeId !== user.unidadeId) {
       throw new AppError("Acesso negado.", 403);
     }
 
+    // Deleta do Firestore
     await userRef.delete();
 
+    // Deleta do Firebase Auth (Tenta, se falhar porque já não existe, ignora)
     try {
       await getAuth().deleteUser(uid);
     } catch (error: any) {
       if (error.code !== "auth/user-not-found") {
-        throw new AppError("Falha ao remover do Firebase Auth.", 500);
+        throw new AppError("Falha ao remover o usuário da autenticação.", 500);
       }
     }
   }

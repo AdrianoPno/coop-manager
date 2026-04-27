@@ -2,7 +2,7 @@ import { Router } from "express";
 import authRoutes from "./modules/auth/auth.routes";
 import cooperadosRoutes from "./modules/cooperados/cooperados.routes";
 import usersRoutes from "./modules/users/users.routes";
-import unidadesRoutes from "./unidades/unidades.routes";
+import unidadesRoutes from "./modules/unidades/unidades.routes";
 
 const routes = Router();
 

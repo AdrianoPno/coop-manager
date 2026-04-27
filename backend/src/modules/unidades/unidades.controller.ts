@@ -1,11 +1,8 @@
 import { Response } from "express";
-import { AuthRequest } from "../middleware/auth.middleware";
-import { UsersService } from "../modules/users/users.service";
-import { AppError } from "../utils/AppError";
+import { AuthRequest } from "../../middleware/auth.middleware";
 import { UnidadesService } from "./unidades.service";
 
 const unidadesService = new UnidadesService();
-const usersService = new UsersService();
 
 export class UnidadesController {
   async index(req: AuthRequest, res: Response) {
@@ -18,12 +15,7 @@ export class UnidadesController {
   }
 
   async show(req: AuthRequest, res: Response) {
-    const { id } = req.params;
-
-    if (typeof id !== "string") {
-      throw new AppError("ID da unidade inválido.", 400);
-    }
-
+    const { id } = res.locals.validatedData.params;
     const unidade = await unidadesService.getById(id);
     return res.status(200).json({
       success: true,
@@ -33,9 +25,8 @@ export class UnidadesController {
   }
 
   async store(req: AuthRequest, res: Response) {
-    const { nome, sigla, status } = req.body;
-
-    const id = await unidadesService.create({ nome, sigla, status });
+    const { body } = res.locals.validatedData;
+    const id = await unidadesService.create(body);
     return res.status(201).json({
       success: true,
       data: { id },
@@ -44,14 +35,8 @@ export class UnidadesController {
   }
 
   async update(req: AuthRequest, res: Response) {
-    const { id } = req.params;
-    const data = req.body;
-
-    if (typeof id !== "string") {
-      throw new AppError("ID da unidade inválido.", 400);
-    }
-
-    await unidadesService.update(id, data);
+    const { params, body } = res.locals.validatedData;
+    await unidadesService.update(params.id, body);
     return res.status(200).json({
       success: true,
       message: "Unidade atualizada com sucesso.",
@@ -59,12 +44,7 @@ export class UnidadesController {
   }
 
   async delete(req: AuthRequest, res: Response) {
-    const { id } = req.params;
-
-    if (typeof id !== "string") {
-      throw new AppError("ID da unidade inválido.", 400);
-    }
-
+    const { id } = res.locals.validatedData.params;
     await unidadesService.delete(id);
 
     return res.status(200).json({

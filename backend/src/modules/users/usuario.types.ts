@@ -48,33 +48,39 @@ export interface IUser {
  *   schemas:
  *     ICreateUserDTO:
  *       type: object
- *       description: Dados para criação de um novo perfil de usuário. O campo 'unidadeId' é inferido do admin logado e não deve ser enviado.
+ *       description: Dados para criação de um novo perfil de usuário. O campo 'unidadeId' é obrigatório para SUPER e inferido do admin logado para ADMIN.
  *       required:
- *         - uid
  *         - nome
  *         - email
  *         - role
+ *         - password
  *       properties:
- *         uid:
- *           type: string
- *           description: UID gerado pelo Firebase Auth para o novo usuário.
  *         nome:
  *           type: string
  *         email:
  *           type: string
  *           format: email
+ *         password:
+ *           type: string
+ *           format: password
+ *           minLength: 6
+ *           description: Senha temporária para o novo usuário.
  *         role:
  *           $ref: '#/components/schemas/UserRole'
+ *         unidadeId:
+ *           type: string
+ *           description: ID da unidade. Obrigatório se o requisitante for SUPER. Ignorado se for ADMIN.
  */
 /**
  * Data Transfer Object para criação de usuário.
- * Usado quando um ADMIN cadastra um novo colaborador no sistema.
+ * Usado quando um ADMIN ou SUPER cadastra um novo colaborador no sistema.
  */
 export interface ICreateUserDTO {
-  uid: string;
   nome: string;
   email: string;
   role: UserRole;
+  password: string;
+  unidadeId?: string; // Opcional, a lógica de serviço decide
 }
 
 /**
