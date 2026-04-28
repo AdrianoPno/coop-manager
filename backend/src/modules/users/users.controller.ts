@@ -17,6 +17,20 @@ export class UsersController {
     });
   }
 
+  // Detalha um usuário
+  async show(req: AuthRequest, res: Response) {
+    const { id } = res.locals.validatedData.params;
+
+    // Passa o req.user para a checagem de permissão
+    const user = await usersService.getById(id, req.user!);
+
+    return res.status(200).json({
+      success: true,
+      data: user,
+      message: "Usuário recuperado com sucesso.",
+    });
+  }
+
   // Cria um novo usuário
   async store(req: AuthRequest, res: Response) {
     // Pega dados validados do Zod (incluindo a senha)

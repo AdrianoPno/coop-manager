@@ -1,12 +1,12 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  LayoutDashboard as DashboardIcon,
-  Users as PeopleIcon,
-  Building2 as ApartmentIcon,
-  UserCog as GroupIcon,
-  LogOut as LogoutIcon,
-} from "lucide-react";
+  Dashboard as DashboardIcon,
+  People as PeopleIcon,
+  Apartment as ApartmentIcon,
+  Group as GroupIcon,
+  Logout as LogoutIcon,
+} from "@mui/icons-material";
 import { useAuthStore } from "../../store/useAuthStore";
 import {
   Box,
@@ -87,7 +87,7 @@ export const Sidebar: React.FC = () => {
               selected={isActive(item.path)}
               sx={{ borderRadius: 2 }}
             >
-              <ListItemIcon>
+              <ListItemIcon sx={{ color: "inherit" }}>
                 <item.icon />
               </ListItemIcon>
               <ListItemText primary={item.name} />
@@ -112,7 +112,7 @@ export const Sidebar: React.FC = () => {
                   selected={isActive(item.path)}
                   sx={{ borderRadius: 2 }}
                 >
-                  <ListItemIcon>
+                  <ListItemIcon sx={{ color: "inherit" }}>
                     <item.icon />
                   </ListItemIcon>
                   <ListItemText primary={item.name} />
@@ -134,7 +134,7 @@ export const Sidebar: React.FC = () => {
             "&:hover": { bgcolor: "rgba(255, 82, 82, 0.1)" },
           }}
         >
-          <ListItemIcon sx={{ color: "inherit" }}>
+          <ListItemIcon sx={{ color: "error.light" }}>
             <LogoutIcon />
           </ListItemIcon>
           <ListItemText primary="Sair do Sistema" />

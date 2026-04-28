@@ -15,9 +15,7 @@ const cooperadoBodyBase = z.object({
   nome: z.string().min(1, "O nome é obrigatório."),
   email: z.string().email("E-mail inválido.").optional().or(z.literal("")),
   cpf: z.string().min(1, "O CPF é obrigatório."),
-  telefone: z.string().optional().or(z.literal("")),
-  dataNascimento: dateSchema.optional().or(z.literal("")), // Opcional se não houver no form
-  sexo: z.enum(["Masculino", "Feminino", "Outro"]).optional(),
+  dataNascimento: dateSchema.optional().or(z.literal("")),
   etnia: z.string().optional(),
   escolaridade: z.string().optional(),
   cargo: z.string().min(1, "O cargo é obrigatório."),

@@ -11,7 +11,7 @@ import {
   IconButton,
   Typography,
 } from "@mui/material";
-import { Edit } from "lucide-react";
+import { Edit } from "@mui/icons-material";
 import { IUnidade } from "../../../types/unidade.types";
 
 interface UnidadeTableProps {
@@ -54,7 +54,7 @@ export const UnidadeTable: React.FC<UnidadeTableProps> = ({
                       size="small"
                       onClick={() => onEdit(unidade.id)}
                     >
-                      <Edit size={18} />
+                      <Edit fontSize="small" />
                     </IconButton>
                   </TableCell>
                 </TableRow>

@@ -14,6 +14,8 @@ import {
   IDashboardStats,
 } from "../../services/dashboardService";
 import { PageContainer } from "../../components/layout/PageContainer";
+import { useAuthStore } from "../../store/useAuthStore";
+import { DashboardCharts } from "./components/DashboardCharts";
 
 // Retorna a cor do MUI com base na contagem de alertas
 const getAlertColor = (count: number): "error" | "warning" | "inherit" => {
@@ -26,6 +28,7 @@ const DashboardPage = () => {
   const [stats, setStats] = useState<IDashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<any>(null);
+  const { user } = useAuthStore();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -87,26 +90,32 @@ const DashboardPage = () => {
     >
       <Grid container spacing={3}>
         {isLoading ? (
-          Array.from(new Array(3)).map((_, index) => (
-            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
+          Array.from(new Array(4)).map((_, index) => (
+            <Grid item xs={12} sm={6} md={3} key={index}>
               <Skeleton variant="rectangular" height={120} />
             </Grid>
           ))
         ) : (
           <>
-            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <Grid item xs={12} sm={6} md={3}>
               <KpiCard
                 title="Cooperados Ativos"
                 value={stats?.overview.totalCooperados ?? 0}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <Grid item xs={12} sm={6} md={3}>
+              <KpiCard
+                title="Taxa de Conformidade"
+                value={`${stats?.overview.complianceRate ?? 0}%`}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
               <KpiCard
                 title="Novos Cooperados (Mês)"
                 value={stats?.overview.newCooperadosThisMonth ?? 0}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <Grid item xs={12} sm={6} md={3}>
               <KpiCard
                 title="Alertas"
                 value={totalAlerts}
@@ -116,6 +125,11 @@ const DashboardPage = () => {
           </>
         )}
       </Grid>
+
+      {/* Renderiza os gráficos apenas para SUPER admin e se não estiver carregando */}
+      {!isLoading && user?.role === "SUPER" && stats?.charts && (
+        <DashboardCharts chartsData={stats.charts} />
+      )}
     </PageContainer>
   );
 };

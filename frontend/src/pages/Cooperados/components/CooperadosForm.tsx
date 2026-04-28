@@ -1,13 +1,25 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { differenceInHours } from "date-fns";
-import { Loader2 } from "lucide-react";
+import {
+  Stack,
+  TextField,
+  Button,
+  CircularProgress,
+  Alert,
+  Grid,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+} from "@mui/material";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { cooperadoSchema } from "../../../schemas/cooperado.schema";
+import {
+  cooperadoSchema,
+  CooperadoFormData,
+} from "../../../schemas/cooperado.schema";
 import { cooperadoService } from "../../../services/cooperado.service";
-import { Input } from "../../../components/ui/Input";
-import { Select } from "../../../components/ui/Select";
 
 interface CooperadoFormProps {
   onSuccess: () => void;
@@ -18,172 +30,145 @@ export const CooperadoForm: React.FC<CooperadoFormProps> = ({
   onSuccess,
   initialId,
 }) => {
-  const isEdit = !!initialId;
-  const [isLocked, setIsLocked] = useState(false);
-  const [fetchingData, setFetchingData] = useState(isEdit);
+  const queryClient = useQueryClient();
+
+  // Busca dados do cooperado para edição
+  const { data: cooperadoData, isLoading: isLoadingCooperado } = useQuery({
+    queryKey: ["cooperado", initialId],
+    queryFn: () => cooperadoService.getById(initialId!),
+    enabled: !!initialId,
+  });
 
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitting },
-  } = useForm<any>({
+    formState: { errors },
+  } = useForm<CooperadoFormData>({
     resolver: zodResolver(cooperadoSchema),
-    defaultValues: {
-      nome: "",
-      cpf: "",
-      ID_COOPERADO: "",
-      cargo: "",
-      tipoVinculo: "COOP",
-      status: "ATIVO",
-      dataEntrada: new Date().toISOString().split("T")[0],
+  });
+
+  // Popula o formulário quando os dados de edição são carregados
+  useEffect(() => {
+    if (cooperadoData) {
+      reset({
+        ...cooperadoData,
+        // Garante que a data esteja no formato YYYY-MM-DD para o input type="date"
+        dataEntrada: cooperadoData.dataEntrada
+          ? new Date(cooperadoData.dataEntrada).toISOString().split("T")[0]
+          : "",
+      });
+    }
+  }, [cooperadoData, reset]);
+
+  const { mutate, isPending, error } = useMutation({
+    mutationFn: (data: CooperadoFormData) => {
+      if (initialId) {
+        return cooperadoService.update(initialId, data);
+      }
+      return cooperadoService.create(data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cooperados"] });
+      onSuccess();
     },
   });
 
-  useEffect(() => {
-    if (isEdit) {
-      loadCooperado();
-    }
-  }, [initialId]);
-
-  const loadCooperado = async () => {
-    try {
-      setFetchingData(true);
-      const data = await cooperadoService.getById(initialId!);
-
-      reset({
-        nome: data.nome,
-        cpf: data.cpf,
-        ID_COOPERADO: data.ID_COOPERADO,
-        cargo: data.cargo,
-        tipoVinculo: data.tipoVinculo,
-        status: data.status,
-        dataEntrada: data.dataEntrada,
-        dataSaida: data.dataSaida || "",
-      });
-
-      // Regra de bloqueio de 48h (Exceto Cargo, Vínculo e Status)
-      if (data.createdAt || data.criadoEm) {
-        const rawDate = data.createdAt || data.criadoEm;
-        const createdAt =
-          typeof rawDate === "object" &&
-          rawDate !== null &&
-          "seconds" in rawDate
-            ? new Date((rawDate as any).seconds * 1000)
-            : new Date(rawDate);
-
-        const hours = differenceInHours(new Date(), createdAt);
-        if (hours >= 48) setIsLocked(true);
-      }
-    } catch (error) {
-      console.error("Erro ao carregar dados", error);
-      onSuccess();
-    } finally {
-      setFetchingData(false);
-    }
+  const onSubmit = (data: CooperadoFormData) => {
+    mutate(data);
   };
 
-  const onSubmit = async (data: any) => {
-    try {
-      if (isEdit) {
-        await cooperadoService.update(initialId!, data);
-      } else {
-        await cooperadoService.create(data);
-      }
-      onSuccess();
-    } catch (error) {
-      console.error("Erro ao salvar", error);
-      alert("Erro ao salvar os dados do cooperado.");
-    }
-  };
-
-  if (fetchingData) {
-    return (
-      <div className="flex justify-center p-10">
-        <Loader2 className="animate-spin text-blue-600" size={32} />
-      </div>
-    );
+  if (isLoadingCooperado) {
+    return <CircularProgress />;
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <Input
-        label="Nome Completo"
-        {...register("nome")}
-        error={errors.nome?.message as string}
-        disabled={isLocked || isSubmitting}
-      />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Input
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Stack spacing={3}>
+        {error && <Alert severity="error">{(error as any).message}</Alert>}
+        <TextField
+          label="Nome Completo"
+          {...register("nome")}
+          error={!!errors.nome}
+          helperText={errors.nome?.message}
+          fullWidth
+          required
+        />
+        <TextField
+          label="E-mail"
+          type="email"
+          {...register("email")}
+          error={!!errors.email}
+          helperText={errors.email?.message}
+          fullWidth
+          required
+        />
+        <TextField
           label="CPF"
           {...register("cpf")}
-          error={errors.cpf?.message as string}
-          disabled={isLocked || isSubmitting}
+          error={!!errors.cpf}
+          helperText={errors.cpf?.message}
+          fullWidth
+          required
         />
-        <Input
+        <TextField
           label="Matrícula"
-          {...register("ID_COOPERADO")}
-          error={errors.ID_COOPERADO?.message as string}
-          disabled={isLocked || isSubmitting}
+          {...register("matricula")}
+          error={!!errors.matricula}
+          helperText={errors.matricula?.message}
+          fullWidth
+          required
         />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Input
+        <TextField
           label="Função (Cargo)"
           {...register("cargo")}
-          error={errors.cargo?.message as string}
-          disabled={isSubmitting}
+          error={!!errors.cargo}
+          helperText={errors.cargo?.message}
+          fullWidth
         />
-        <Select
-          label="Vínculo"
-          {...register("tipoVinculo")}
-          error={errors.tipoVinculo?.message as string}
-          disabled={isSubmitting}
-        >
-          <option value="COOP">COOP</option>
-          <option value="RPA">RPA</option>
-        </Select>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Input
+        <FormControl fullWidth>
+          <InputLabel id="status-label">Status</InputLabel>
+          <Select
+            labelId="status-label"
+            label="Status"
+            defaultValue={cooperadoData?.status || "ATIVO"}
+            {...register("status")}
+          >
+            <MenuItem value="ATIVO">Ativo</MenuItem>
+            <MenuItem value="INATIVO">Inativo</MenuItem>
+            <MenuItem value="PENDENTE">Pendente</MenuItem>
+          </Select>
+        </FormControl>
+        <TextField
           label="Data de Entrada"
           type="date"
+          InputLabelProps={{ shrink: true }}
           {...register("dataEntrada")}
-          error={errors.dataEntrada?.message as string}
-          disabled={isLocked || isSubmitting}
+          error={!!errors.dataEntrada}
+          helperText={errors.dataEntrada?.message}
+          fullWidth
+          required
         />
-        <Select
-          label="Status"
-          {...register("status")}
-          error={errors.status?.message as string}
-          disabled={isSubmitting}
+        <Stack
+          direction="row"
+          spacing={2}
+          justifyContent="flex-end"
+          sx={{ pt: 2 }}
         >
-          <option value="ATIVO">Ativo</option>
-          <option value="INATIVO">Inativo</option>
-          <option value="PENDENTE">Pendente</option>
-        </Select>
-      </div>
-
-      <div className="flex justify-end gap-3 pt-6 border-t border-slate-100">
-        <button
-          type="button"
-          onClick={onSuccess}
-          className="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors"
-        >
-          Cancelar
-        </button>
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 disabled:bg-slate-300 transition-colors flex items-center"
-        >
-          {isSubmitting && <Loader2 className="animate-spin mr-2" size={18} />}
-          {isEdit ? "Atualizar Dados" : "Salvar Cooperado"}
-        </button>
-      </div>
+          <Button onClick={onSuccess} color="secondary">
+            Cancelar
+          </Button>
+          <Button type="submit" variant="contained" disabled={isPending}>
+            {isPending ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : initialId ? (
+              "Salvar Alterações"
+            ) : (
+              "Salvar Cooperado"
+            )}
+          </Button>
+        </Stack>
+      </Stack>
     </form>
   );
 };

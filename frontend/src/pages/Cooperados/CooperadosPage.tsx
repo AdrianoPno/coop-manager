@@ -17,8 +17,9 @@ import {
   Alert,
   AlertTitle,
 } from "@mui/material";
-import { Plus as Add, Edit } from "lucide-react";
+import { Add, Edit } from "@mui/icons-material";
 import { useCooperados } from "../../hooks/useCooperados";
+import { ICooperado } from "../../types/cooperado.types";
 import { PageContainer } from "../../components/layout/PageContainer";
 import { CooperadoForm } from "./components/CooperadosForm";
 
@@ -26,7 +27,8 @@ const CooperadosPage: React.FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
 
-  // Hook consumindo os tipos automaticamente do TanStack Query
+  // ✅ CORREÇÃO: Removida a asserção de tipo desnecessária.
+  // O hook `useCooperados` já fornece a tipagem correta via TanStack Query.
   const { data: cooperados, isLoading, isError, error } = useCooperados();
 
   const handleCreate = () => {
@@ -44,38 +46,29 @@ const CooperadosPage: React.FC = () => {
     setSelectedId(undefined);
   };
 
-  // Feedback: Carregamento
   if (isLoading) {
     return (
       <PageContainer
         title="Cooperados"
         subtitle="Gestão de membros e registros da unidade"
       >
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            py: 10,
-          }}
-        >
+        <Box display="flex" justifyContent="center" alignItems="center" p={5}>
           <CircularProgress />
         </Box>
       </PageContainer>
     );
   }
 
-  // Feedback: Erro
   if (isError) {
     return (
       <PageContainer
         title="Cooperados"
         subtitle="Gestão de membros e registros da unidade"
       >
-        <Alert severity="error" sx={{ borderRadius: 2 }}>
+        <Alert severity="error">
           <AlertTitle>Erro ao carregar dados</AlertTitle>
           Não foi possível buscar a lista de cooperados. —{" "}
-          <strong>{(error as any)?.message || "Erro desconhecido"}</strong>
+          <strong>{error?.message || "Erro desconhecido"}</strong>
         </Alert>
       </PageContainer>
     );
@@ -91,112 +84,65 @@ const CooperadosPage: React.FC = () => {
         </Button>
       }
     >
-      {/* Drawer para Cadastro/Edição */}
       <Drawer
         anchor="right"
         open={isDrawerOpen}
         onClose={handleCloseDrawer}
-        slotProps={{
-          paper: {
-            sx: {
-              width: "100%",
-              maxWidth: 500,
-              p: 3,
-            },
-          },
-        }}
+        PaperProps={{ sx: { width: "100%", maxWidth: 500, p: 3 } }}
       >
-        <Typography
-          variant="h5"
-          sx={{ fontWeight: 800, mb: 1, color: "primary.main" }}
-        >
-          {selectedId ? "Editar Cooperado" : "Cadastrar Novo"}
+        <Typography variant="h5" component="h2" sx={{ mb: 3 }}>
+          {selectedId ? "Editar Cooperado" : "Cadastrar Novo Cooperado"}
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-          Preencha os dados abaixo. Todos os campos com * são obrigatórios.
-        </Typography>
-
+        {/* O formulário é renderizado dentro do Drawer do MUI */}
         <CooperadoForm initialId={selectedId} onSuccess={handleCloseDrawer} />
       </Drawer>
 
-      {/* Tabela de Resultados */}
       <Paper sx={{ overflow: "hidden" }}>
         <TableContainer>
           <Table stickyHeader aria-label="tabela de cooperados">
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: 700, backgroundColor: "#f8f9fa" }}>
-                  Nome / E-mail
-                </TableCell>
-                <TableCell sx={{ fontWeight: 700, backgroundColor: "#f8f9fa" }}>
-                  Matrícula
-                </TableCell>
-                <TableCell sx={{ fontWeight: 700, backgroundColor: "#f8f9fa" }}>
-                  CPF
-                </TableCell>
-                <TableCell sx={{ fontWeight: 700, backgroundColor: "#f8f9fa" }}>
-                  Status
-                </TableCell>
-                <TableCell
-                  align="right"
-                  sx={{ fontWeight: 700, backgroundColor: "#f8f9fa" }}
-                >
-                  Ações
-                </TableCell>
+                <TableCell>Nome / E-mail</TableCell>
+                <TableCell>Matrícula</TableCell>
+                <TableCell>CPF</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell align="right">Ações</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {cooperados && cooperados.length > 0 ? (
-                cooperados.map((cooperado) => (
-                  <TableRow hover key={cooperado.id}>
-                    <TableCell>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              {cooperados?.map((cooperado) => (
+                <TableRow hover key={cooperado.id}>
+                  <TableCell>
+                    <Box>
+                      <Typography variant="body2" sx={{ fontWeight: "600" }}>
                         {cooperado.nome}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
                         {cooperado.email}
                       </Typography>
-                    </TableCell>
-                    <TableCell>{cooperado.matricula}</TableCell>
-                    <TableCell>{cooperado.cpf}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={cooperado.status}
-                        size="small"
-                        sx={{
-                          fontWeight: 700,
-                          fontSize: "0.65rem",
-                          backgroundColor: (theme) =>
-                            cooperado.status === "ATIVO"
-                              ? `${theme.palette.success.light}33`
-                              : `${theme.palette.warning.light}33`,
-                          color: (theme) =>
-                            cooperado.status === "ATIVO"
-                              ? theme.palette.success.dark
-                              : theme.palette.warning.dark,
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell align="right">
-                      <IconButton
-                        color="primary"
-                        onClick={() => handleEdit(cooperado.id)}
-                        size="small"
-                      >
-                        <Edit size={18} />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 10 }}>
-                    <Typography color="text.secondary">
-                      Nenhum cooperado encontrado.
-                    </Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell>{cooperado.matricula}</TableCell>
+                  <TableCell>{cooperado.cpf}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={cooperado.status}
+                      size="small"
+                      color={
+                        cooperado.status === "ATIVO" ? "success" : "warning"
+                      }
+                    />
+                  </TableCell>
+                  <TableCell align="right">
+                    <IconButton
+                      color="primary"
+                      onClick={() => handleEdit(cooperado.id)}
+                    >
+                      <Edit fontSize="small" />
+                    </IconButton>
                   </TableCell>
                 </TableRow>
-              )}
+              ))}
             </TableBody>
           </Table>
         </TableContainer>

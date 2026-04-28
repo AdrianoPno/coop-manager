@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import {
   Button,
   Typography,
@@ -9,10 +9,9 @@ import {
   AlertTitle,
   Paper,
 } from "@mui/material";
-import { UserPlus as InviteIcon } from "lucide-react";
+import { PersonAdd as InviteIcon } from "@mui/icons-material";
 import { PageContainer } from "../../components/layout/PageContainer";
 import { useUsuarios } from "../../hooks/useUsuarios";
-import { useUnidades } from "../../hooks/useUnidades";
 import { UsuarioForm } from "./components/UsuarioForm";
 import { UsuarioTable } from "./components/UsuarioTable";
 
@@ -20,14 +19,7 @@ const UsuariosPage: React.FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
 
-  const {
-    data: users,
-    isLoading: isLoadingUsers,
-    isError,
-    error,
-  } = useUsuarios();
-
-  const { data: unidades, isLoading: isLoadingUnidades } = useUnidades();
+  const { data: users, isLoading, isError, error } = useUsuarios();
 
   const handleInvite = () => {
     setSelectedId(undefined);
@@ -43,21 +35,6 @@ const UsuariosPage: React.FC = () => {
     setIsDrawerOpen(false);
     setSelectedId(undefined);
   };
-
-  // ✅ CORREÇÃO: Enriquecendo os dados para a tabela
-  const enrichedUsers = useMemo(() => {
-    if (!users) return [];
-    if (!unidades) return users;
-
-    const unidadesMap = new Map(unidades.map((u) => [u.id, u.nome]));
-
-    return users.map((user) => ({
-      ...user,
-      unidadeNome: unidadesMap.get(user.unidadeId) || "Não vinculada",
-    }));
-  }, [users, unidades]);
-
-  const isLoading = isLoadingUsers || isLoadingUnidades;
 
   return (
     <PageContainer
@@ -114,9 +91,8 @@ const UsuariosPage: React.FC = () => {
           {(error as any)?.message || "Ocorreu um erro desconhecido."}
         </Alert>
       ) : (
-        /* ✅ CORREÇÃO: Passando enrichedUsers em vez de users */
         <Paper sx={{ overflow: "hidden" }}>
-          <UsuarioTable users={enrichedUsers} onEdit={handleEdit} />
+          <UsuarioTable users={users} onEdit={handleEdit} />
         </Paper>
       )}
     </PageContainer>

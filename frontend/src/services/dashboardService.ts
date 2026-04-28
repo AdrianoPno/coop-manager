@@ -14,10 +14,11 @@ export interface IDashboardStats {
   };
   charts: {
     statusDistribution: Record<string, number>;
+    // Data for SUPER Admin charts
+    unitDistribution: Array<{ name: string; value: number }>;
+    docFunnel: Array<{ name: string; COMPLETA: number; PENDENTE: number }>;
+    monthlyGrowth: Array<{ month: string; total: number }>;
   };
-  superAdminData: {
-    topUnidades: Array<{ unidadeId: string; count: number }>;
-  } | null;
   lastUpdate: string;
 }
 

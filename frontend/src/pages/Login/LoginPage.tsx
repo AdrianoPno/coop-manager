@@ -101,9 +101,6 @@ const LoginPage: React.FC = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}
-              slotProps={{
-                inputLabel: { shrink: true },
-              }}
             />
             <TextField
               margin="normal"
@@ -118,9 +115,6 @@ const LoginPage: React.FC = () => {
               onChange={(e) => setPassword(e.target.value)}
               disabled={isLoading}
               sx={{ mb: 3 }}
-              slotProps={{
-                inputLabel: { shrink: true },
-              }}
             />
 
             <Button

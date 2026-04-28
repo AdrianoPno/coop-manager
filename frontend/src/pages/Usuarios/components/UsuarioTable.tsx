@@ -12,7 +12,7 @@ import {
   Typography,
   Box,
 } from "@mui/material";
-import { Edit } from "lucide-react";
+import { Edit } from "@mui/icons-material";
 import { IUser } from "../../../types/usuario.types";
 
 interface UsuarioTableProps {
@@ -68,7 +68,7 @@ export const UsuarioTable: React.FC<UsuarioTableProps> = ({
                       size="small"
                       onClick={() => onEdit(user.id)}
                     >
-                      <Edit size={18} />
+                      <Edit fontSize="small" />
                     </IconButton>
                   </TableCell>
                 </TableRow>

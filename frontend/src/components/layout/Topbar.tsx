@@ -1,11 +1,19 @@
 import React from "react";
 import { useAuthStore } from "../../store/useAuthStore"; // Ajustado o caminho relativo
 import {
-  LogOut as Logout,
-  UserCircle as AccountCircle,
+  Logout as LogoutIcon,
+  AccountCircle as AccountCircleIcon,
   ChevronRight,
-  Building2 as AccountBalance,
-} from "lucide-react";
+  AccountBalance as AccountBalanceIcon,
+} from "@mui/icons-material";
+import {
+  AppBar,
+  Toolbar,
+  Box,
+  Typography,
+  Breadcrumbs,
+  IconButton,
+} from "@mui/material";
 import { useLocation, NavLink } from "react-router-dom";
 
 const capitalize = (s: string) =>
@@ -19,80 +27,111 @@ const Topbar: React.FC = () => {
   const pathnames = location.pathname.split("/").filter((x) => x);
 
   return (
-    <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0 shadow-sm">
-      {/* Breadcrumbs */}
-      <nav
-        className="flex items-center text-sm text-gray-500"
-        aria-label="Breadcrumb"
-      >
-        <NavLink
-          to="/dashboard"
-          className="hover:text-blue-600 transition-colors"
+    <AppBar
+      position="static"
+      color="default"
+      elevation={0}
+      sx={{
+        bgcolor: "background.paper",
+        borderBottom: "1px solid",
+        borderColor: "divider",
+      }}
+    >
+      <Toolbar sx={{ justifyContent: "space-between" }}>
+        {/* Breadcrumbs */}
+        <Breadcrumbs
+          separator={<ChevronRight fontSize="small" />}
+          aria-label="breadcrumb"
         >
-          Dashboard
-        </NavLink>
-        {pathnames.map((name, index) => {
-          if (name.toLowerCase() === "dashboard") return null;
-          const routeTo = `/${pathnames.slice(0, index + 1).join("/")}`;
-          const isLast = index === pathnames.length - 1;
+          <Typography
+            component={NavLink}
+            to="/dashboard"
+            variant="body2"
+            sx={{ textDecoration: "none", color: "text.secondary" }}
+          >
+            Dashboard
+          </Typography>
+          {pathnames.map((name, index) => {
+            if (name.toLowerCase() === "dashboard") return null;
+            const routeTo = `/${pathnames.slice(0, index + 1).join("/")}`;
+            const isLast = index === pathnames.length - 1;
 
-          return (
-            <React.Fragment key={name}>
-              <ChevronRight size={18} className="mx-1" />
-              {isLast ? (
-                <span className="font-medium text-gray-800">
-                  {capitalize(name)}
-                </span>
-              ) : (
-                <NavLink
-                  to={routeTo}
-                  className="hover:text-blue-600 transition-colors"
+            return isLast ? (
+              <Typography key={name} variant="body2" color="text.primary">
+                {capitalize(name)}
+              </Typography>
+            ) : (
+              <Typography
+                key={name}
+                component={NavLink}
+                to={routeTo}
+                variant="body2"
+                sx={{ textDecoration: "none", color: "text.secondary" }}
+              >
+                {capitalize(name)}
+              </Typography>
+            );
+          })}
+        </Breadcrumbs>
+
+        {/* User & Context Menu */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          {user?.unidadeNome && (
+            <Box
+              sx={{
+                display: { xs: "none", sm: "flex" },
+                alignItems: "center",
+                gap: 1,
+                px: 1.5,
+                py: 0.5,
+                bgcolor: "grey.100",
+                borderRadius: 2,
+              }}
+            >
+              <AccountBalanceIcon
+                sx={{ fontSize: 20, color: "primary.main" }}
+              />
+              <Box sx={{ textAlign: "right" }}>
+                <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                  {user.role === "SUPER" ? "Visão Global" : "Unidade"}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{ fontWeight: 600, lineHeight: 1.2 }}
                 >
-                  {capitalize(name)}
-                </NavLink>
-              )}
-            </React.Fragment>
-          );
-        })}
-      </nav>
+                  {user.unidadeNome}
+                </Typography>
+              </Box>
+            </Box>
+          )}
 
-      {/* User & Context Menu */}
-      <div className="flex items-center gap-6">
-        {user?.unidadeNome && (
-          <div className="flex items-center gap-2 px-3 py-1 bg-slate-50 rounded-lg border border-slate-100 hidden sm:flex">
-            <AccountBalance size={18} className="text-blue-600" />
-            <div className="text-right">
-              <div className="text-[10px] uppercase tracking-wider text-slate-400 font-bold leading-none">
-                {user.role === "SUPER" ? "Visão Global" : "Unidade"}
-              </div>
-              <div className="text-sm font-bold text-slate-700">
-                {user.unidadeNome}
-              </div>
-            </div>
-          </div>
-        )}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+            <AccountCircleIcon sx={{ fontSize: 36, color: "grey.400" }} />
+            <Box>
+              <Typography
+                variant="body2"
+                sx={{ fontWeight: 600, lineHeight: 1.2 }}
+              >
+                {user?.nome || "Usuário"}
+              </Typography>
+              <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                {user?.role}
+              </Typography>
+            </Box>
+          </Box>
 
-        <div className="h-8 w-px bg-gray-200 hidden sm:block" />
-
-        <span className="text-sm font-medium text-gray-700 flex items-center gap-2">
-          <AccountCircle size={28} className="text-gray-400" />
-          <div className="flex flex-col">
-            <span className="leading-none">{user?.nome || "Usuário"}</span>
-            <span className="text-[10px] text-gray-400 font-normal">
-              {user?.role}
-            </span>
-          </div>
-        </span>
-
-        <button
-          onClick={logout}
-          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-all"
-          title="Sair"
-        >
-          <Logout size={22} />
-        </button>
-      </div>
-    </header>
+          <IconButton
+            onClick={logout}
+            title="Sair"
+            sx={{
+              "&:hover": { bgcolor: "error.lighter", color: "error.main" },
+            }}
+          >
+            <LogoutIcon />
+          </IconButton>
+        </Box>
+      </Toolbar>
+    </AppBar>
   );
 };
 

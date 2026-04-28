@@ -8,7 +8,7 @@ export const cooperadoSchema = z.object({
   cargo: z.string().min(2, "O cargo é obrigatório"),
   // Remova o .optional() e garanta o enum estrito
   status: z.enum(["ATIVO", "INATIVO", "PENDENTE"]),
-  telefone: z.string().optional().default(""), // Torna a entrada opcional, mas a saída é uma string garantida pelo default
+  dataEntrada: z.string().min(1, "A data de entrada é obrigatória."),
 });
 
 export type CooperadoFormData = z.infer<typeof cooperadoSchema>;

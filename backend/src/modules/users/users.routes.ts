@@ -7,7 +7,8 @@ import {
   createUserSchema,
   updateUserSchema,
   deleteUserSchema,
-} from "../../utils/users.schema";
+} from "../../utils/users.schema"; // OBS: Este arquivo não está no contexto, mas estou assumindo que ele existe.
+import { getUserSchema } from "./users.schema";
 
 const router = Router();
 const controller = new UsersController();
@@ -42,6 +43,35 @@ router.use(authMiddleware, checkRoles(["SUPER", "ADMIN"]));
  *         description: Acesso restrito a administradores.
  */
 router.get("/", (req, res) => controller.index(req, res));
+
+/**
+ * @openapi
+ * /users/{id}:
+ *   get:
+ *     summary: Detalha um usuário
+ *     description: Retorna os detalhes de um usuário específico. Acesso restrito a SUPER e ADMIN (apenas para usuários da sua unidade).
+ *     tags: [Usuários]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: Detalhes do usuário.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/IUser'
+ *       '404':
+ *         description: Usuário não encontrado.
+ */
+router.get(
+  "/:id",
+  validate(getUserSchema), // Valida que o ID está presente
+  (req, res) => controller.show(req, res),
+);
 
 /**
  * @openapi

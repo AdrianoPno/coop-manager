@@ -13,7 +13,6 @@ export interface ICooperado {
   cargo: string;
   tipoVinculo: "COOP" | "RPA";
   status: "ATIVO" | "INATIVO" | "PENDENTE";
-  telefone?: string;
   dataEntrada: string;
   dataSaida?: string | null;
   unidadeId: string;

@@ -11,6 +11,7 @@ interface AuthUser {
 
 export class UsersService {
   private collection = db.collection("users");
+  private unidadesCollection = db.collection("unidades");
 
   async list(user: AuthUser): Promise<IUser[]> {
     let query: FirebaseFirestore.Query = this.collection;
@@ -21,18 +22,58 @@ export class UsersService {
       query = query.where("unidadeId", "==", user.unidadeId);
     }
 
-    const snapshot = await query.get();
+    const snapshot = await query.orderBy("nome", "asc").get();
 
-    return snapshot.docs.map((doc) => {
+    // Para evitar N+1 queries, buscamos todas as unidades de uma vez
+    const unidadesSnapshot = await this.unidadesCollection.get();
+    const unidadesMap = new Map(
+      unidadesSnapshot.docs.map((doc) => [doc.id, doc.data().nome]),
+    );
+
+    const users = snapshot.docs.map((doc) => {
       const data = doc.data();
       return {
         id: doc.id,
         ...data,
+        unidadeNome: unidadesMap.get(data.unidadeId) || data.unidadeId, // Enriquecimento
         createdAt: data?.createdAt?.toDate
           ? data.createdAt.toDate()
           : data?.createdAt,
       } as IUser;
     });
+
+    return users;
+  }
+
+  async getById(id: string, user: AuthUser): Promise<IUser> {
+    const docRef = this.collection.doc(id);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      throw new AppError("Usuário não encontrado.", 404);
+    }
+
+    const userData = doc.data() as IUser;
+
+    // Trava Multi-tenant: SUPER ignora, ADMIN só pode ver se for da mesma unidade
+    if (user.role === "ADMIN" && userData.unidadeId !== user.unidadeId) {
+      throw new AppError(
+        "Acesso negado: este usuário pertence a outra unidade.",
+        403,
+      );
+    }
+
+    // Garante que o nome da unidade seja populado
+    if (userData.unidadeId && !userData.unidadeNome) {
+      const unidadeDoc = await this.unidadesCollection
+        .doc(userData.unidadeId)
+        .get();
+      if (unidadeDoc.exists) {
+        userData.unidadeNome = unidadeDoc.data()?.nome;
+      }
+    }
+
+    return { id: doc.id, ...userData } as IUser;
   }
 
   async create(data: ICreateUserDTO, user: AuthUser): Promise<string> {

@@ -9,7 +9,7 @@ import {
   AlertTitle,
   Paper,
 } from "@mui/material";
-import { Plus as Add } from "lucide-react";
+import { Add } from "@mui/icons-material";
 import { PageContainer } from "../../components/layout/PageContainer";
 import { useUnidades } from "../../hooks/useUnidades";
 import { UnidadeForm } from "./components/UnidadeForm";
