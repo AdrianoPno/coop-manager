@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { AuthRequest } from "../../middleware/auth.middleware";
 import { DashboardService } from "./dashboard.service";
+import logger from "../../config/logger";
 
 export class DashboardController {
   private dashboardService = new DashboardService();
@@ -16,7 +17,7 @@ export class DashboardController {
         message: "Estatísticas do dashboard recuperadas com sucesso.",
       });
     } catch (error: any) {
-      console.error("Erro ao buscar estatísticas do dashboard:", error);
+      logger.error({ err: error }, "Erro ao buscar estatísticas do dashboard");
       return res.status(500).json({
         success: false,
         message: error.message || "Erro interno ao processar estatísticas.",

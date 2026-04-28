@@ -2,6 +2,7 @@ import { db } from "../../config/firebase";
 import { AppError } from "../../utils/AppError";
 import { getAuth } from "firebase-admin/auth";
 import { IUser, ICreateUserDTO, IUpdateUserDTO } from "./usuario.types";
+import logger from "../../config/logger";
 
 interface AuthUser {
   role: "SUPER" | "ADMIN" | "USER";
@@ -80,8 +81,11 @@ export class UsersService {
       return authRecord.uid;
     } catch (dbError) {
       // ROLLBACK: Limpa o Auth se o banco falhar
-      console.error("🔥 Falha no Firestore. Iniciando Rollback no Auth...");
       await getAuth().deleteUser(authRecord.uid);
+      logger.error(
+        { uid: authRecord.uid, err: dbError },
+        "🔥 Falha no Firestore. Rollback no Auth executado.",
+      );
       throw new AppError(
         "Erro ao salvar perfil. O cadastro foi cancelado.",
         500,

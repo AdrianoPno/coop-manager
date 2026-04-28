@@ -29,7 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           logout();
         }
       } catch (error) {
-        console.error("Erro ao carregar perfil do usuário:", error);
+        // O erro já é tratado pelo logout, que limpa o estado.
         logout(); // Limpa estado se a API falhar
       } finally {
         // Garantia final de que o app sairá do estado de loading

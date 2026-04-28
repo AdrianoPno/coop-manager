@@ -1,14 +1,15 @@
 import { Request, Response, NextFunction } from "express";
 import { AnyZodObject, ZodError } from "zod";
+import logger from "../config/logger";
 
 export const validate =
   (schema: AnyZodObject) =>
   async (req: Request, res: Response, next: NextFunction) => {
     // LOG DE ENTRADA: Se isso não aparecer, a requisição nem chegou aqui!
-    console.log(
-      `\n🔍 [VALIDATE] Recebendo ${req.method} para ${req.originalUrl}`,
+    logger.debug(
+      { method: req.method, url: req.originalUrl, params: req.params },
+      `[VALIDATE] Recebendo requisição`,
     );
-    console.log(`📦 [PARAMS]:`, req.params);
 
     try {
       const validatedData = await schema.parseAsync({
@@ -17,7 +18,7 @@ export const validate =
         params: req.params,
       });
 
-      console.log(`✅ [VALIDATE] Sucesso!`);
+      logger.debug(`[VALIDATE] Sucesso na validação`);
       // Anexa os dados validados ao res.locals para uso no controller,
       // evitando a mutação do objeto `req` que causa o erro.
       res.locals.validatedData = validatedData;
@@ -25,20 +26,20 @@ export const validate =
       return next();
     } catch (error) {
       if (error instanceof ZodError) {
-        // LOG DE ERRO DETALHADO
-        console.log(
-          "❌ [ERRO DE VALIDAÇÃO]:",
-          JSON.stringify(error.flatten().fieldErrors, null, 2),
-        );
+        const validationErrors = error.flatten().fieldErrors;
+        logger.warn({ errors: validationErrors }, "❌ Erro de validação Zod");
 
         return res.status(400).json({
           success: false,
           message: "Dados inválidos.",
-          errors: error.flatten().fieldErrors,
+          errors: validationErrors,
         });
       }
 
-      console.error("🔥 [SYSTEM ERROR]:", error);
+      logger.error(
+        { err: error },
+        "🔥 Erro inesperado no middleware de validação",
+      );
       return res.status(500).json({
         success: false,
         message: "Erro interno no servidor.",

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
+import logger from "../config/logger";
 
 // Tipagem alinhada com as necessidades do Service e Controller
 export interface AuthRequest extends Request {
@@ -63,7 +64,10 @@ export const authMiddleware = async (
 
     next();
   } catch (error) {
-    console.error("🔥 [AUTH ERROR]:", error);
+    logger.error(
+      { err: error },
+      "🔥 Falha na verificação do token de autenticação",
+    );
     return res.status(401).json({ error: "Token inválido ou expirado" });
   }
 };
