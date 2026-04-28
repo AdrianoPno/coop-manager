@@ -1,14 +1,28 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  Users,
-  Building2,
-  LayoutDashboard,
-  LogOut,
-  UserCircle,
+  LayoutDashboard as DashboardIcon,
+  Users as PeopleIcon,
+  Building2 as ApartmentIcon,
+  UserCog as GroupIcon,
+  LogOut as LogoutIcon,
 } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
-import { Box, Typography } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  ListSubheader,
+  Divider,
+  Chip,
+} from "@mui/material";
+
+const SIDEBAR_WIDTH = 260;
 
 export const Sidebar: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -16,112 +30,135 @@ export const Sidebar: React.FC = () => {
 
   // Itens comuns (Dashboard e Cooperados)
   const menuItems = [
-    { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-    { name: "Cooperados", path: "/cooperados", icon: Users },
+    { name: "Dashboard", path: "/dashboard", icon: DashboardIcon },
+    { name: "Cooperados", path: "/cooperados", icon: PeopleIcon },
   ];
 
   // Itens restritos: Unidades e Usuários (Apenas para SUPER)
   const superAdminItems = [
-    { name: "Unidades", path: "/unidades", icon: Building2 },
-    { name: "Usuários", path: "/usuarios", icon: UserCircle },
+    { name: "Unidades", path: "/unidades", icon: ApartmentIcon },
+    { name: "Usuários", path: "/usuarios", icon: GroupIcon },
   ];
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => location.pathname.startsWith(path);
 
   // Garantindo que a comparação ignore espaços ou cases diferentes
   const isSuper = user?.role?.trim().toUpperCase() === "SUPER";
 
-  return (
-    <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col h-full">
-      {/* Brand / Logo */}
-      <div className="p-6">
-        <h1 className="text-white text-xl font-bold tracking-tight">
+  const drawerContent = (
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+      }}
+    >
+      <Box sx={{ p: 3, pb: 2 }}>
+        <Typography
+          variant="h5"
+          sx={{ color: "common.white", fontWeight: 800 }}
+        >
           Coop Manager
-        </h1>
+        </Typography>
 
         {/* Badge de Identificação de Nível */}
-        <Box
+        <Chip
           sx={{
-            display: "inline-block",
-            bgcolor: isSuper
-              ? "rgba(59, 130, 246, 0.2)"
-              : "rgba(148, 163, 184, 0.1)",
-            px: 1.5,
-            py: 0.5,
-            borderRadius: 1,
             mt: 1,
-            border: "1px solid",
-            borderColor: isSuper ? "blue.500" : "slate.700",
+            height: "auto",
+            "& .MuiChip-label": { py: 0.5, px: 1 },
+            color: isSuper ? "primary.light" : "grey.400",
+            borderColor: isSuper ? "primary.dark" : "grey.700",
+            bgcolor: isSuper ? "primary.dark" : "grey.800",
           }}
-        >
-          <Typography
-            variant="caption"
-            sx={{
-              color: isSuper ? "#60a5fa" : "#94a3b8",
-              fontWeight: 800,
-              fontSize: "0.65rem",
-              textTransform: "uppercase",
-            }}
-          >
-            {user?.role || "Visitante"}
-          </Typography>
-        </Box>
-      </div>
+          label={user?.role || "Visitante"}
+          size="small"
+          variant="outlined"
+        />
+      </Box>
 
-      <nav className="flex-1 px-4 space-y-1">
+      <List component="nav" sx={{ flexGrow: 1, px: 2 }}>
         {/* Renderiza itens gerais */}
         {menuItems.map((item) => (
-          <Link
-            key={item.path}
-            to={item.path}
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-              isActive(item.path)
-                ? "bg-blue-600 text-white"
-                : "hover:bg-slate-800"
-            }`}
-          >
-            <item.icon size={20} />
-            <span className="font-medium">{item.name}</span>
-          </Link>
+          <ListItem key={item.path} disablePadding>
+            <ListItemButton
+              component={Link}
+              to={item.path}
+              selected={isActive(item.path)}
+              sx={{ borderRadius: 2 }}
+            >
+              <ListItemIcon>
+                <item.icon />
+              </ListItemIcon>
+              <ListItemText primary={item.name} />
+            </ListItemButton>
+          </ListItem>
         ))}
 
         {/* Seção Administrativa: Protegida pela role SUPER */}
         {isSuper && (
           <>
-            <div className="pt-6 pb-2 px-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-              Administração Global
-            </div>
+            <ListSubheader
+              component="div"
+              sx={{ bgcolor: "transparent", color: "grey.500", mt: 2 }}
+            >
+              Administração
+            </ListSubheader>
             {superAdminItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                  isActive(item.path)
-                    ? "bg-blue-600 text-white"
-                    : "hover:bg-slate-800"
-                }`}
-              >
-                <item.icon size={20} />
-                <span className="font-medium">{item.name}</span>
-              </Link>
+              <ListItem key={item.path} disablePadding>
+                <ListItemButton
+                  component={Link}
+                  to={item.path}
+                  selected={isActive(item.path)}
+                  sx={{ borderRadius: 2 }}
+                >
+                  <ListItemIcon>
+                    <item.icon />
+                  </ListItemIcon>
+                  <ListItemText primary={item.name} />
+                </ListItemButton>
+              </ListItem>
             ))}
           </>
         )}
-      </nav>
+      </List>
 
       {/* Logout Area */}
-      <div className="p-4 border-t border-slate-800">
-        <button
-          onClick={() => logout()}
-          className="flex items-center gap-3 w-full px-3 py-2 text-red-400 hover:bg-red-900/20 rounded-lg transition-colors group"
+      <Box sx={{ px: 2, pb: 2 }}>
+        <Divider sx={{ mb: 2, borderColor: "grey.800" }} />
+        <ListItemButton
+          onClick={logout}
+          sx={{
+            borderRadius: 2,
+            color: "error.light",
+            "&:hover": { bgcolor: "rgba(255, 82, 82, 0.1)" },
+          }}
         >
-          <LogOut
-            size={20}
-            className="group-hover:scale-110 transition-transform"
-          />
-          <span className="font-medium">Sair do Sistema</span>
-        </button>
-      </div>
-    </aside>
+          <ListItemIcon sx={{ color: "inherit" }}>
+            <LogoutIcon />
+          </ListItemIcon>
+          <ListItemText primary="Sair do Sistema" />
+        </ListItemButton>
+      </Box>
+    </Box>
+  );
+
+  return (
+    <Drawer
+      variant="permanent"
+      sx={{
+        width: SIDEBAR_WIDTH,
+        flexShrink: 0,
+        "& .MuiDrawer-paper": {
+          width: SIDEBAR_WIDTH,
+          boxSizing: "border-box",
+          bgcolor: "#1e293b", // Cor correspondente ao slate-800
+          color: "grey.300",
+          borderRight: "none",
+        },
+      }}
+    >
+      {drawerContent}
+    </Drawer>
   );
 };
